@@ -1,0 +1,6 @@
+andy,10
+uma,9
+rob,7.5
+thomas,7.5
+ian,6.5
+computer,0
