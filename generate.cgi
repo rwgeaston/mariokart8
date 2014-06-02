@@ -95,16 +95,19 @@ def main():
         generation_log.write('{},{}\n'.format(generation_number, selections))
 
     print '''
-    <meta http-equiv="refresh" content="1;url=show_generation.cgi?gen={gen_num}">
-        <script type="text/javascript">
-            window.location.href = "show_generation.cgi?gen={gen_num}"
-        </script>
-        <title>Page Redirection</title>
-    </head>
-    <body>
-        If you are not redirected automatically, please click to see
-        <a href='show_generation.cgi?gen={gen_num}'> generation log</a>
-    </body>'''.format(gen_num=generation_number)
+<html>
+<head>
+<title>Show random team generation</title>
+<meta http-equiv="refresh" content="1;url=show_generation.cgi?gen={gen_num}">
+    <script type="text/javascript">
+        window.location.href = "show_generation.cgi?gen={gen_num}"
+    </script>
+    <title>Page Redirection</title>
+</head>
+<body>
+    If you are not redirected automatically, please click to see
+    <a href="show_generation.cgi?gen={gen_num}"> generation log</a>
+</body>'''.format(gen_num=generation_number)
     return
 
 main()
