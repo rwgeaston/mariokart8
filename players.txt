@@ -1,10 +1,1 @@
-oliver,0.75
-ian,0.75
-andy,0.75
-joe,0.5
-uma,0.25
-arvinda,0.25
 computer,0.0
-rob,0.0
-thomas,-0.25
-johan,-0.5

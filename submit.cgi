@@ -5,6 +5,7 @@ import cgitb
 import os
 from html_tools import html_table
 from cgi import FieldStorage
+from time import time
 
 #enable debugging
 cgitb.enable()
@@ -96,26 +97,36 @@ def main():
 
     if red_score >= red_to_change:
         handicap_change(selection, 1)
-        print "Red team is the best!"
     elif (410 - red_score) >= blue_to_change:
         handicap_change(selection, -1)
-        print "Blue team wins! (they probably got lucky)"
-    else:
-        print "No change."
 
-    print '<br><br>'
-
-    handicaps = [["Player", "Handicap"]]
+    handicaps = []
     with open('players.txt') as current_handicaps:
         for line in current_handicaps:
             player, handicap = line.strip().split(',')
             handicaps.append([player.capitalize(), handicap])
 
     with open('results_log.txt', 'a') as results_log:
-        results_log.write("{},{},{}".format(gen_number,selection['players'],handicaps))
+        results_log.write(
+            "{},{},{},{},{}\n"
+            .format(gen_number,red_score,selection['players'],handicaps,time()))
 
-    print html_table(handicaps)
     return
 
 main()
-print '</html>'
+
+print '''
+<html>
+<head>
+<title>Show random team generation</title>
+<meta http-equiv="refresh" content="1;url=show_game.cgi?gen={gen_num}">
+    <script type="text/javascript">
+        window.location.href = "show_game.cgi?gen={gen_num}"
+    </script>
+    <title>Page Redirection</title>
+</head>
+<body>
+    If you are not redirected automatically, please click to see
+    <a href="show_game.cgi?gen={gen_num}"> generation log</a>
+</body>
+</html>'''.format(gen_num=GET['gen'].value)

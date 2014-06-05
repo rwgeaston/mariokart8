@@ -57,6 +57,12 @@ print (
     )
 )
 
-print '<input type="submit" value="Generate teams"></form>'
+print '''
+<input type="submit" value="Generate teams"></form>
 
-print '</body></html>'
+<p><a href="show_handicaps.cgi">See current handicaps</a></p>
+<p><a href="recent_games.cgi?display_count=10">See previously generated games</a></p>
+<p><a href="recent_games.cgi?completed_only=true&display_count=10">
+    See games with submitted results only</a></p>
+
+</body></html>'''
