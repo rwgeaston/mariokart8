@@ -13,16 +13,16 @@ GET = FieldStorage()
 print "Content-Type: text/html"
 print
 
-if 'completed_only' in GET and GET['completed_only'].value == 'true':
-    completed_only = True
-else:
-    completed_only = False
+completed_only = 'completed_only' in GET and GET['completed_only'].value == 'true'
 
 if 'display_count' in GET:
-    try:
-        display_count = int(GET['display_count'].value)
-    except ValueError:
-        display_count = 10
+    if GET['display_count'].value == 'all':
+        display_count = -1
+    else:
+        try:
+            display_count = int(GET['display_count'].value)
+        except ValueError:
+            display_count = 10
 else:
     display_count = 10
 
@@ -82,7 +82,7 @@ game_generations_raw.reverse()
 
 printed_game_count = 0
 for game in game_generations_raw:
-    if printed_game_count >= display_count:
+    if printed_game_count == display_count:
         break
     gen_number, game_info = eval(game)
     if gen_number in game_results:
