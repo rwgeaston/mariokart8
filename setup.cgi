@@ -28,7 +28,7 @@ player_list = [listing.split(',')[0] for listing in current_handicaps]
 def player_dropdown(position):
     return dropdown_box(
         str(position), 
-        player_list, 
+        sorted(player_list), 
         'computer', 
         [player.capitalize() for player in player_list]
     )
