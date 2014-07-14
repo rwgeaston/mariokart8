@@ -6,6 +6,7 @@ import os
 from html_tools import html_table
 from cgi import FieldStorage
 from time import time
+from show_game_shared_code import get_winning_scores
 
 #enable debugging
 cgitb.enable()
@@ -83,21 +84,11 @@ def main():
     if red_score < 105 or red_score > 305:
         return invalid_score("One of us doesn't know how mario kart scoring works.")
 
-    net_red_handicap = 0
-    for player_num in range(4):
-        if selection['team colours'][player_num] == 'red':
-            net_red_handicap += selection['handicaps before this game'][player_num]
-        else:
-            net_red_handicap -= selection['handicaps before this game'][player_num]
+    scores_to_win = get_winning_scores(selection['team colours'], selection['handicaps before this game'])
 
-    red_to_win = int(205 + net_red_handicap / 2.0 + 1)
-    blue_to_win = int(205 - net_red_handicap / 2.0 + 1)
-    red_to_change = int(205 + net_red_handicap / 2.0 + 3)
-    blue_to_change = int(205 - net_red_handicap / 2.0 + 3)
-
-    if red_score >= red_to_change:
+    if red_score >= scores_to_win['to change']['red']:
         handicap_change(selection, 1)
-    elif (410 - red_score) >= blue_to_change:
+    elif (410 - red_score) >= scores_to_win['to change']['blue']:
         handicap_change(selection, -1)
 
     handicaps = []

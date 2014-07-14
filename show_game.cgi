@@ -4,7 +4,7 @@
 import cgitb
 import os
 from cgi import FieldStorage
-from show_game_shared_code import show_game_shared, format_time, get_winning_scores, get_result_string
+from show_game_shared_code import show_game_shared, format_time, get_winning_scores, get_result_string, get_net_handicap
 from html_tools import html_table
 
 #enable debugging
@@ -48,6 +48,18 @@ def show_result(red_score, result_handicaps, winning_scores, time):
 
     print '<p>', html_table(handicaps_after_this_game), '</p>'
 
+def handicap_difference_string(red_net_handicap):
+    if red_net_handicap == 1:
+        return "Red team is better by 1 point per race"
+    elif red_net_handicap == -1:
+        return "Blue team is better by 1 point per race"
+    elif red_net_handicap > 0:
+        return "Red team is better by {} points per race".format(red_net_handicap)
+    elif red_net_handicap < 0:
+        return "Blue team is better by {} points per race".format(-red_net_handicap)
+    else:
+        return "Handicaps are equal"
+
 def main():
     if 'gen' not in GET:
         print "You don't have a gen value in the GET. How did you get to this page?"
@@ -81,6 +93,13 @@ def main():
         tense = 's'
     else:
         tense = 'ed'
+
+    red_net_handicap = get_net_handicap(
+        selection['team colours'],
+        selection['handicaps before this game']
+    )
+
+    print "<p>{}</p>".format(handicap_difference_string(red_net_handicap))
 
     for team_colour in ['red', 'blue']:
         print ("<p class='{}_team'>"

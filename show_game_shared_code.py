@@ -3,7 +3,9 @@
 
 from html_tools import html_table
 import vehicle_data
-from time import gmtime
+from time import localtime
+from math import ceil
+from datetime import datetime
 
 def show_selection(selection, player_number):
     return '''
@@ -51,12 +53,12 @@ def get_winning_scores(team_colours, handicaps):
     net_red_handicap = get_net_handicap(team_colours, handicaps)
     return {
         'to win':{
-            'red': int(205 + net_red_handicap / 2.0 + 1),
-            'blue': int(205 - net_red_handicap / 2.0 + 1)
+            'red': int(ceil(205 + net_red_handicap * 5 / 2.0 + 0.25)),
+            'blue': int(ceil(205 - net_red_handicap * 5 / 2.0 + 0.25))
         },
         'to change':{
-            'red': int(205 + net_red_handicap / 2.0 + 3),
-            'blue': int(205 - net_red_handicap / 2.0 + 3)
+            'red': int(ceil(205 + net_red_handicap * 5 / 2.0 + 2.5)),
+            'blue': int(ceil(205 - net_red_handicap * 5 / 2.0 +2.5))
         }
     }
 
@@ -70,13 +72,15 @@ def get_net_handicap(team_colours, handicaps):
     return net_red_handicap
 
 def format_time(unix_time):
-    time_split = gmtime(unix_time)
-    return "{}-{}-{} {}:{}".format(
+    time_split = localtime(unix_time)
+    return datetime(
         time_split.tm_year,
         time_split.tm_mon,
         time_split.tm_mday,
         time_split.tm_hour,
-        time_split.tm_min)
+        time_split.tm_min,
+        time_split.tm_sec
+    )
 
 def get_result_string(winning_scores, red_score):
     if red_score >= winning_scores['to change']['red']:
