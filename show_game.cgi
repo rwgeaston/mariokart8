@@ -4,8 +4,8 @@
 import cgitb
 import os
 from cgi import FieldStorage
-from show_game_shared_code import show_game_shared, format_time, get_winning_scores, get_result_string, get_net_handicap
-from html_tools import html_table
+from show_game_shared_code import show_game_shared, format_time, get_winning_scores, get_result_string, get_net_handicap, get_winning_margin_string, get_result_extra_handicaps
+from html_tools import html_table, paragraph
 
 #enable debugging
 cgitb.enable()
@@ -36,17 +36,21 @@ def game_not_played(gen_number):
     print '<input type="hidden" name="gen" value="{}" />'.format(gen_number)
     print '<input type="submit" value="Submit result"></form>'
 
-def show_result(red_score, result_handicaps, winning_scores, time):
+def show_result(red_score, result_handicaps, winning_scores, time, game_info, net_red_handicap):
     print ("<p>Final score was <span class=red_team>{}</span>-"
            "<span class=blue_team>{}</span> submitted on {}.</p>"
            .format(red_score, 410-red_score, format_time(time)))
-    print get_result_string(winning_scores, red_score)
+
+    print paragraph(get_winning_margin_string(winning_scores, net_red_handicap, red_score))
+    print paragraph(get_result_string(winning_scores, red_score))
+
+    print get_result_extra_handicaps(game_info, red_score)
 
     handicaps_after_this_game = [["Player", "Handicap"]]
     for player, handicap in result_handicaps:
         handicaps_after_this_game.append([player.capitalize(), handicap])
 
-    print '<p>', html_table(handicaps_after_this_game), '</p>'
+    print paragraph(html_table(handicaps_after_this_game))
 
 def handicap_difference_string(red_net_handicap):
     if red_net_handicap == 1:
@@ -116,7 +120,7 @@ def main():
             print "<p>More than one submitted result matches this game generation, wtf? (well here's all the results anyway)</p>"
 
         for red_score, result_handicaps, time in matching_games:
-            show_result(red_score, result_handicaps, winning_scores, time)
+            show_result(red_score, result_handicaps, winning_scores, time, selection, red_net_handicap)
 
     return
 
