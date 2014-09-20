@@ -2,11 +2,11 @@
 # -*- coding: UTF-8 -*-
 
 import cgitb
-import os
-from html_tools import html_table, dropdown_box
 from cgi import FieldStorage
 from random import randint, choice, shuffle
+
 import vehicle_data
+from mario_kart_files import get_current_handicaps, append_generation
 
 #enable debugging
 cgitb.enable()
@@ -15,10 +15,12 @@ GET = FieldStorage()
 print "Content-Type: text/html"
 print
 
+
 def generation_error(message):
     print message.replace('\n', '<br />')
     print '<br /><a href="setup.cgi">Return to player selection.</a>'
     return
+
 
 def main():
     if isinstance(GET['players'], list):
@@ -26,10 +28,7 @@ def main():
     else:
         player_list = [GET['players'].value]
 
-    with open('players.txt') as current_handicaps_file:
-        current_handicaps_raw = current_handicaps_file.readlines()
-
-    current_handicaps = dict([listing.strip().split(',') for listing in current_handicaps_raw])
+    current_handicaps = dict(get_current_handicaps())
 
     # error checking in the GET; probably needed because ob is allowed to use this site
     if len(player_list) != 4:
@@ -85,17 +84,7 @@ def main():
     selections['tyres'] = [choice(vehicle_data.tyres.keys()) for i in range(4)]
     selections['gliders'] = [choice(vehicle_data.gliders.keys()) for i in range(4)]
 
-    with open('generation_log.txt') as generation_log:
-        try:
-            last_gen_line = generation_log.readlines()[-1]
-        except IndexError:
-            # wow, first ever game
-            generation_number = 1
-        else:
-            generation_number = int(last_gen_line.split(',')[0]) + 1
-
-    with open('generation_log.txt', 'a') as generation_log:
-        generation_log.write('{},{}\n'.format(generation_number, selections))
+    append_generation(selections)
 
     print '''
 <html>

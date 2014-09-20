@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
+
 def html_table(two_d_array, sortable=False):
     strings = []
     if sortable:
@@ -14,6 +15,7 @@ def html_table(two_d_array, sortable=False):
         strings.append('</tr>')
     strings.append('</table>')
     return ''.join(strings)
+
 
 def dropdown_box(name, options, default, options_friendly):
     html = ['<select name="{}">'.format(name)]
@@ -31,11 +33,17 @@ def dropdown_box(name, options, default, options_friendly):
     html.append('</select>')
     return '\n'.join(html)
 
-def html_wrap(tag, text):
-    return "<{tag}>{text}</{tag}>".format(tag=tag, text=text)
 
-def bold(text):
-    return html_wrap('b', text)
+def html_wrap(tag, text, span_args=""):
+    return (
+        "<{tag} {args}>{text}</{tag}>"
+        .format(tag=tag, text=text, args=span_args)
+    )
 
-def paragraph(text):
-    return html_wrap('p', text)
+
+def bold(text, span_args=""):
+    return html_wrap('b', text, span_args)
+
+
+def paragraph(text, span_args=""):
+    return html_wrap('p', text, span_args)

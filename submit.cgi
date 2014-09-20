@@ -2,12 +2,11 @@
 # -*- coding: UTF-8 -*-
 
 import cgitb
-import os
-from html_tools import html_table
 from cgi import FieldStorage
-from time import time
 from show_game_shared_code import get_winning_scores
 from decay import not_recent_players
+from mario_kart_files import get_current_handicaps, get_one_generation_from_gen_number, \
+    save_handicaps, append_result
 
 #enable debugging
 cgitb.enable()
@@ -23,6 +22,7 @@ print '''
 </head>
 '''
 
+
 def invalid_score(message):
     print message.replace('\n', '<br />')
     print ('<br><a href="show_generation.cgi?gen={}">'
@@ -30,16 +30,9 @@ def invalid_score(message):
            .format(GET['gen'].value))
     return
 
-def get_handicaps():
-    handicaps = []
-    with open('players.txt') as current_handicaps:
-        for line in current_handicaps:
-            player, handicap = line.strip().split(',')
-            handicaps.append([player, float(handicap)])
-    return handicaps
 
 def handicap_change(selection, change_direction):
-    handicaps = get_handicaps()
+    handicaps = get_current_handicaps()
 
     for player, team in zip(selection['players'], selection['team colours']):
         for person in handicaps:
@@ -62,11 +55,6 @@ def handicap_change(selection, change_direction):
 
     save_handicaps(handicaps)
 
-def save_handicaps(handicaps):
-    sorted_handicaps = sorted(handicaps, key=lambda person: -person[1])
-    with open('players.txt', 'w') as handicap_file:
-        for person in sorted_handicaps:
-            handicap_file.write("{},{}\n".format(*person))
 
 def decay_handicaps():
     handicaps = get_handicaps()
@@ -76,7 +64,8 @@ def decay_handicaps():
         if player[0] in players_to_decay and player[1] > 0:
             player[1] -= 0.25
 
-    save_handicaps(handicaps)    
+    save_handicaps(handicaps)
+
 
 def main():
     for key in ['gen', 'redscore']:
@@ -84,14 +73,10 @@ def main():
             print "You don't have a {} value in the GET. How did you get to this page?".format(key)
             return
 
-    with open('generation_log.txt') as generation_log:
-        for generation in generation_log.readlines():
-            gen_number, selection = eval(generation)
-            if str(gen_number) == GET['gen'].value:
-                break
-        else:
-            print "I can't find that generation number. How did you get to this page?"
-            return
+    generation = get_one_generation_from_gen_number(GET['gen'].value)
+    if not generation:
+        print "I can't find that generation number. How did you get to this page?"
+        return
 
     try:
         red_score = int(GET['redscore'].value)
@@ -101,26 +86,26 @@ def main():
     if red_score < 105 or red_score > 305:
         return invalid_score("One of us doesn't know how mario kart scoring works.")
 
-    scores_to_win = get_winning_scores(selection['team colours'], selection['handicaps before this game'])
+    scores_to_win = get_winning_scores(
+        generation['game info']['team colours'],
+        generation['game info']['handicaps before this game'])
 
     if red_score >= scores_to_win['to change']['red']:
-        handicap_change(selection, 1)
+        handicap_change(generation['game info'], 1)
     elif (410 - red_score) >= scores_to_win['to change']['blue']:
-        handicap_change(selection, -1)
+        handicap_change(generation['game info'], -1)
 
-    if gen_number % 10 == 0:
+    if generation['generation number'] % 10 == 0:
         decay_handicaps()
 
-    handicaps = []
-    with open('players.txt') as current_handicaps:
-        for line in current_handicaps:
-            player, handicap = line.strip().split(',')
-            handicaps.append([player.capitalize(), handicap])
+    handicaps = get_current_handicaps()
 
-    with open('results_log.txt', 'a') as results_log:
-        results_log.write(
-            "{},{},{},{},{}\n"
-            .format(gen_number,red_score,selection['players'],handicaps,time()))
+    append_result(
+        generation['generation number'],
+        generation['red score'],
+        generation['game info']['players'],
+        handicaps
+    )
 
     return
 

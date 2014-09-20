@@ -2,9 +2,8 @@
 # -*- coding: UTF-8 -*-
 
 import cgitb
-import os
-from html_tools import html_table, dropdown_box
 from cgi import FieldStorage
+from mario_kart_files import get_generations
 
 #enable debugging
 cgitb.enable()
@@ -20,17 +19,14 @@ print '''
 </head>
 '''
 
-with open("generation_log.txt") as generation_log_file:
-    generations = generation_log_file.readlines()
+last_generation = get_generations(1)
 
-last_gen_number, last_generation = eval(generations[-1])
-
-print "{}<br />".format(last_gen_number)
+print "{}<br />".format(last_generation['generation number'])
 
 for colour, player, character, vehicle in zip(
-    last_generation['team colours'], 
-    last_generation['players'],
-    last_generation['characters'],
-    last_generation['vehicles']
+    last_generation['game info']['team colours'],
+    last_generation['game info']['players'],
+    last_generation['game info']['characters'],
+    last_generation['game info']['vehicles']
 ):
     print "{},{},{},{}<br />".format(colour, player, character, vehicle)

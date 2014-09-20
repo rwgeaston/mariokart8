@@ -2,10 +2,13 @@
 # -*- coding: UTF-8 -*-
 
 import cgitb
-import os
 from cgi import FieldStorage
-from show_game_shared_code import show_game_shared, format_time, get_winning_scores, get_result_string, get_net_handicap, get_winning_margin_string, get_result_extra_handicaps
+
+from show_game_shared_code import show_game_shared, format_time, \
+    get_winning_scores, get_result_string, get_net_handicap, \
+    get_winning_margin_string, get_result_extra_handicaps
 from html_tools import html_table, paragraph
+from mario_kart_files import get_one_generation_from_gen_number
 
 #enable debugging
 cgitb.enable()
@@ -30,11 +33,13 @@ print '''
 </head>
 '''
 
+
 def game_not_played(gen_number):
     print '<form name="submit" action="submit.cgi" method="post">'
     print 'Red team final score: <input type="text" name="redscore"><br><br>'
     print '<input type="hidden" name="gen" value="{}" />'.format(gen_number)
     print '<input type="submit" value="Submit result"></form>'
+
 
 def show_result(red_score, result_handicaps, winning_scores, time, game_info, net_red_handicap):
     print ("<p>Final score was <span class=red_team>{}</span>-"
@@ -52,6 +57,7 @@ def show_result(red_score, result_handicaps, winning_scores, time, game_info, ne
 
     print paragraph(html_table(handicaps_after_this_game))
 
+
 def handicap_difference_string(red_net_handicap):
     if red_net_handicap == 1:
         return "Red team is better by 1 point per race"
@@ -64,63 +70,60 @@ def handicap_difference_string(red_net_handicap):
     else:
         return "Handicaps are equal"
 
+
 def main():
     if 'gen' not in GET:
         print "You don't have a gen value in the GET. How did you get to this page?"
         return
 
-    with open('generation_log.txt') as generation_log:
-        for generation in generation_log.readlines():
-            gen_number, selection = eval(generation)
-            if str(gen_number) == GET['gen'].value:
-                break
-        else:
-            print "I can't find that generation number. How did you get to this page?"
-            return
+    generation = get_one_generation_from_gen_number(GET['gen'].value)
+    if not generation:
+        print "I can't find that generation number. How did you get to this page?"
+        return
 
-    show_game_shared(selection)
+    show_game_shared(generation['game info'])
 
     winning_scores = get_winning_scores(
-        selection['team colours'],
-        selection['handicaps before this game']
+        generation['game info']['team colours'],
+        generation['game info']['handicaps before this game']
     )
-
-    matching_games = []
-
-    with open('results_log.txt') as results_log:
-        for line in results_log.readlines():
-            result_gen_number,red_score,_,result_handicaps,time = eval(line)
-            if gen_number == result_gen_number:
-                matching_games.append((red_score, result_handicaps, time))
-
-    if len(matching_games) == 0:
-        tense = 's'
-    else:
-        tense = 'ed'
 
     red_net_handicap = get_net_handicap(
-        selection['team colours'],
-        selection['handicaps before this game']
+        generation['game info']['team colours'],
+        generation['game info']['handicaps before this game']
     )
 
-    print "<p>{}</p>".format(handicap_difference_string(red_net_handicap))
+    print paragraph(handicap_difference_string(red_net_handicap))
+
+    if 'red score' in generation:
+        tense = "ed"
+    else:
+        tense = "s"
 
     for team_colour in ['red', 'blue']:
-        print ("<p class='{}_team'>"
-               "{} team need{} {} to win and {} for handicap to change."
-               "</p>"
-              .format(team_colour, team_colour.capitalize(), 
-                      tense, winning_scores['to win'][team_colour],
-                      winning_scores['to change'][team_colour]))
+        print (
+            paragraph(
+                "{} team need{} {} to win and {} for handicap to change.",
+                'class={}_team'.format(team_colour)
+            ).format(
+                team_colour.capitalize(),
+                tense,
+                winning_scores['to win'][team_colour],
+                winning_scores['to change'][team_colour]
+            )
+        )
 
-    if len(matching_games) == 0:
-        game_not_played(gen_number)
+    if 'red score' in generation:
+        game_not_played(GET['gen'].value)
     else:
-        if len(matching_games) > 1:
-            print "<p>More than one submitted result matches this game generation, wtf? (well here's all the results anyway)</p>"
-
-        for red_score, result_handicaps, time in matching_games:
-            show_result(red_score, result_handicaps, winning_scores, time, selection, red_net_handicap)
+        show_result(
+            generation['red score'],
+            generation['handicaps after'],
+            winning_scores,
+            generation['time'],
+            generation['game info'],
+            red_net_handicap,
+        )
 
     return
 

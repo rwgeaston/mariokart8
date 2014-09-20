@@ -2,10 +2,10 @@
 # -*- coding: UTF-8 -*-
 
 import cgitb
-import os
 from cgi import FieldStorage
-from html_tools import html_table, paragraph
-from show_game_shared_code import get_winning_scores, format_time
+from html_tools import html_table
+from mario_kart_files import get_generations_with_results
+from show_game_shared_code import average
 
 #enable debugging
 cgitb.enable()
@@ -19,18 +19,10 @@ if 'range size' in GET:
 else:
     range_size = 10
 
-with open('results_log.txt') as results_log:
-    game_results_raw = results_log.readlines()
-
-red_scores = []
-for game in game_results_raw:
-    score = eval(game)[1]
-    red_scores.append(score)
+generations = get_generations_with_results()
+red_scores = [generation['red score'] for generation in generations if 'red score' in generation]
 
 red_scores_grouped = [["generation range", "average score"]]
-
-def average(a_list):
-    return round(sum([float(value) for value in a_list])/len(a_list), 1)
 
 for gen_range_lower in range((len(red_scores) - 1) / range_size + 1):
     score_range = red_scores[gen_range_lower * range_size:(gen_range_lower + 1) * range_size]

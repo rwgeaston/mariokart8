@@ -1,21 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-
 import cgitb
-import os
 from cgi import FieldStorage
 
-from html_tools import html_table, dropdown_box
+from html_tools import html_table
 from stats_links import stats_links
+from mario_kart_files import get_current_handicaps
 
 #enable debugging
 cgitb.enable()
 GET = FieldStorage()
 
-print "Content-Type: text/html"
-print
+print '''Content-Type: text/html
 
-print '''
 <html>
 <head>
 <title>MK8: Select Players</title>
@@ -34,9 +31,7 @@ table, select, input {
 </head>
 '''
 
-current_handicaps_file = open('players.txt')
-current_handicaps = current_handicaps_file.readlines()
-
+current_handicaps = get_current_handicaps()
 player_list = [listing.split(',')[0] for listing in current_handicaps]
 
 print '<form name="settings" action="generate.cgi" method="get"><br />'

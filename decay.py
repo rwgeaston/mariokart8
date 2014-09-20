@@ -1,22 +1,18 @@
-def recent_players(game_count=50):
-    with open("generation_log.txt") as generation_log_file:
-        generation_log_raw = generation_log_file.readlines()
+from mario_kart_files import get_generations, get_current_handicaps
 
-    generation_log_raw.reverse()
+
+def recent_players(game_count=50):
+    generations = get_generations(game_count)
 
     all_recent_players = set()
-
-    for game_raw in generation_log_raw[:game_count]:
-        gen_number, game_info = eval(game_raw)
-        all_recent_players.update(set(game_info['players']))
+    for generation in generations:
+        all_recent_players.update(set(generation['game info']['players']))
 
     return all_recent_players
 
-def not_recent_players(game_count=50):
-    with open('players.txt') as players_file:
-        players_raw = players_file.readlines()
 
-    all_players = set([line.split(',')[0] for line in players_raw])
+def not_recent_players(game_count=50):
+    all_players = set([player[0] for player in get_current_handicaps])
     not_recent_players = all_players - recent_players(game_count)
 
     return not_recent_players

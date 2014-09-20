@@ -2,10 +2,11 @@
 # -*- coding: UTF-8 -*-
 
 import cgitb
-import os
 from cgi import FieldStorage
-from show_game_shared_code import format_time, get_winning_scores, get_result_string, get_net_weight_advantage
+
+from show_game_shared_code import get_adjusted_result
 from html_tools import html_table, paragraph
+from mario_kart_files import get_completed_generations_with_results
 
 #enable debugging
 cgitb.enable()
@@ -13,8 +14,6 @@ GET = FieldStorage()
 
 print "Content-Type: text/html"
 print
-
-completed_only = 'completed_only' in GET and GET['completed_only'].value == 'true'
 
 if 'display_count' in GET:
     if GET['display_count'].value == 'all':
@@ -28,7 +27,7 @@ else:
     display_count = 'all'
 
 if 'red_handicap' in GET:
-    red_handicap = float(GET['red_handicap'].value)	
+    red_handicap = float(GET['red_handicap'].value)
 else:
     red_handicap = 0
 
@@ -41,33 +40,6 @@ if 'player_1_handicap' in GET:
     player_1_handicap = float(GET['player_1_handicap'].value)
 else:
     player_1_handicap = 0
-	
-def get_adjusted_result(gen_number, game_info, results, red_handicap):
-    winning_scores = get_winning_scores(
-        game_info['team colours'],
-        game_info['handicaps before this game']
-    )
-
-    total_red_handicap = red_handicap
-    if game_info['team colours'][0] == 'red':
-        total_red_handicap += player_1_handicap
-    else:
-        total_red_handicap -= player_1_handicap
-    red_team_net_weight_advantage = get_net_weight_advantage(game_info)
-
-    total_red_handicap += red_team_net_weight_advantage * weight_handicap
-
-    if results['red_score'] - total_red_handicap >= winning_scores['to change']['red']:
-        return 'red win', red_team_net_weight_advantage
-    elif 410 - results['red_score'] + total_red_handicap >= winning_scores['to change']['blue']:
-        return 'blue win', red_team_net_weight_advantage
-    elif results['red_score'] - total_red_handicap >= winning_scores['to win']['red']:
-        return 'red win but no change', red_team_net_weight_advantage
-    elif 410 - results['red_score'] + total_red_handicap >= winning_scores['to win']['blue']:
-        return 'blue win but no change', red_team_net_weight_advantage
-    else:
-        return 'perfect draw', red_team_net_weight_advantage
-
 
 print '''
 <html>
@@ -86,18 +58,7 @@ print '''
 }
 </style>'''
 
-with open('generation_log.txt') as generation_log:
-    game_generations_raw = generation_log.readlines()
-
-with open('results_log.txt') as results_log:
-    game_results_raw = results_log.readlines()
-
-game_results = {}
-for result in game_results_raw:
-    gen_number, red_score, _, _, time = eval(result)
-    game_results[gen_number] = {'red_score': red_score, 'time': time}
-
-game_generations_raw.reverse()
+generations = get_completed_generations_with_results(display_count)
 
 results_colour = {
     'red win': 0, 'blue win': 0,
@@ -123,7 +84,7 @@ results_position_map_red = {
 
 results_position_map_blue = {
     'blue win': 'player 1 win',
-    'red win': 'player 1 lose', 
+    'red win': 'player 1 lose',
     'blue win but no change': 'player 1 win but no change',
     'red win but no change': 'player 1 lose but no change',
     'perfect draw': 'perfect draw'
@@ -155,26 +116,26 @@ results_weight_map_blue = {
 }
 
 printed_game_count = 0
-for game in game_generations_raw:
-    if printed_game_count == display_count:
-        break
-    gen_number, game_info = eval(game)
-    if gen_number in game_results:
-        printed_game_count += 1
-        result, net_red_weight_advantage = get_adjusted_result(gen_number, game_info, game_results[gen_number], red_handicap)
-        results_colour[result] += 1
-        if game_info['team colours'][0] == 'red':
-            results_position[results_position_map_red[result]] += 1
-        else:
-            results_position[results_position_map_blue[result]] += 1
+for generation in generations:
+    result, net_red_weight_advantage = get_adjusted_result(
+        generation['generation number'],
+        red_handicap,
+        player_1_handicap,
+        weight_handicap
+    )
 
-        if net_red_weight_advantage == 0:
-            results_weight['no net weight advantage'] += 1
-        elif net_red_weight_advantage > 0:
-            results_weight[results_weight_map_red[result]] += 1
-        else:
-            results_weight[results_weight_map_blue[result]] += 1
+    results_colour[result] += 1
+    if generation['game info']['team colours'][0] == 'red':
+        results_position[results_position_map_red[result]] += 1
+    else:
+        results_position[results_position_map_blue[result]] += 1
 
+    if net_red_weight_advantage == 0:
+        results_weight['no net weight advantage'] += 1
+    elif net_red_weight_advantage > 0:
+        results_weight[results_weight_map_red[result]] += 1
+    else:
+        results_weight[results_weight_map_blue[result]] += 1
 
 results_table = []
 

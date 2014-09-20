@@ -8,6 +8,13 @@ from math import ceil
 from datetime import datetime
 from vehicle_data import characters
 
+
+def average(a_list):
+    if len(a_list) == 0:
+        return 0
+    return sum([float(value) for value in a_list])/len(a_list)
+
+
 def show_selection(selection, player_number):
     return '''
 <p class='{team_colour}_team'>
@@ -143,6 +150,7 @@ weight_class_map = {
     'heavyweight': 6
 }
 
+
 def get_net_weight_advantage(game_info):
     red_team_net_weight_advantage = 0
     for character, colour in zip(game_info['characters'], game_info['team colours']):
@@ -153,6 +161,7 @@ def get_net_weight_advantage(game_info):
             red_team_net_weight_advantage -= weight_this_character
 
     return red_team_net_weight_advantage
+
 
 def get_result_extra_handicaps(game_info, red_score):
     net_red_handicap = get_net_handicap(game_info['team colours'], game_info['handicaps before this game'])
@@ -171,15 +180,15 @@ def get_result_extra_handicaps(game_info, red_score):
     margin = get_winning_margin(winning_scores, net_red_handicap, red_score)
 
     if result == 'draw':
-       result_string = "With this adjustment game would have been a perfect draw"
+        result_string = "With this adjustment game would have been a perfect draw"
     elif result == 'red':
-       result_string = "With this adjustment, red team would have won by {}".format(margin)
+        result_string = "With this adjustment, red team would have won by {}".format(margin)
     elif result == 'blue':
-       result_string = "With this adjustment, blue team would have won by {}".format(margin)
+        result_string = "With this adjustment, blue team would have won by {}".format(margin)
     elif result == 'red no change':
-       result_string = "With this adjustment, red team would have won by {} so no handicap change".format(margin)
+        result_string = "With this adjustment, red team would have won by {} so no handicap change".format(margin)
     else:
-       result_string = "With this adjustment, blue team would have won by {} so no handicap change".format(margin)
+        result_string = "With this adjustment, blue team would have won by {} so no handicap change".format(margin)
 
     return paragraph(
         "Red team additional handicap with colour/positions/weight class adjustment of 1, 0.5, 0.1 is {}."
@@ -187,3 +196,30 @@ def get_result_extra_handicaps(game_info, red_score):
     ) + paragraph(
         result_string
     )
+
+
+def get_adjusted_result(generation, red_handicap, player_1_handicap, weight_handicap):
+    winning_scores = get_winning_scores(
+        generation['game info']['team colours'],
+        generation['game info']['handicaps before this game']
+    )
+
+    total_red_handicap = red_handicap
+    if generation['game info']['team colours'][0] == 'red':
+        total_red_handicap += player_1_handicap
+    else:
+        total_red_handicap -= player_1_handicap
+
+    red_team_net_weight_advantage = get_net_weight_advantage(generation['game info'])
+    total_red_handicap += red_team_net_weight_advantage * weight_handicap
+
+    if generation['red score'] - total_red_handicap >= winning_scores['to change']['red']:
+        return 'red win', red_team_net_weight_advantage
+    elif 410 - generation['red score'] + total_red_handicap >= winning_scores['to change']['blue']:
+        return 'blue win', red_team_net_weight_advantage
+    elif generation['red score'] - total_red_handicap >= winning_scores['to win']['red']:
+        return 'red win but no change', red_team_net_weight_advantage
+    elif 410 - generation['red score'] + total_red_handicap >= winning_scores['to win']['blue']:
+        return 'blue win but no change', red_team_net_weight_advantage
+    else:
+        return 'perfect draw', red_team_net_weight_advantage

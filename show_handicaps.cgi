@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-
-import cgitb
-import os
-from html_tools import html_table
-from cgi import FieldStorage
 from json import dumps
+import cgitb
+from cgi import FieldStorage
+
+from html_tools import html_table
+from mario_kart_files import get_current_handicaps, get_generations_with_results
 
 #enable debugging
 cgitb.enable()
@@ -14,27 +14,25 @@ GET = FieldStorage()
 print "Content-Type: text/html"
 print
 
-current_handicaps_file = open('players.txt')
-current_handicaps = current_handicaps_file.readlines()
-
+all_current_handicaps = get_current_handicaps()
 everyone_ever_played = set()
 
-with open('results_log.txt') as results_log:
-    for line in results_log.readlines():
-        players_this_result = eval(line)[2]
-        everyone_ever_played.update(set(players_this_result))
+generations = get_generations_with_results()
+for generation in generations:
+    if 'red score' in generations:
+        everyone_ever_played.update(generation['game info']['players'])
 
 if 'sort' in GET:
     if GET['sort'].value == 'alphabetical':
-        current_handicaps.sort()
+        all_current_handicaps.sort()
     elif GET['sort'].value == 'best':
-        pass # text file should be written in this order anyway
+        pass  # Text file should be written in this order anyway.
     elif GET['sort'].value == 'worst':
-        current_handicaps.reverse()
+        all_current_handicaps.reverse()
 
 handicaps = [["Player", "Handicap"]]
 
-for line in current_handicaps:
+for line in all_current_handicaps:
     player, handicap = line.strip().split(',')
     if player in everyone_ever_played:
         handicaps.append([player.capitalize(), handicap])

@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
-
 import cgitb
-import os
 from cgi import FieldStorage
+
 from html_tools import html_table, paragraph
-from show_game_shared_code import get_winning_scores, format_time
-from vehicle_data import characters, spec_order, character_classes, vehicles, tyres, gliders, vehicle_classes
+from show_game_shared_code import get_winning_scores, format_time, average
+from vehicle_data import characters, spec_order, character_classes, vehicles, \
+    tyres, gliders, vehicle_classes
+from mario_kart_files import get_completed_generations_with_results, get_current_handicaps
 
 #enable debugging
 cgitb.enable()
@@ -54,10 +55,6 @@ if 'sort' in GET:
     ]:
         sort = GET['sort'].value
 
-def average(a_list):
-    if len(a_list) == 0:
-        return 0
-    return sum([float(value) for value in a_list])/len(a_list)
 
 def get_result_raw(winning_scores, red_score):
     if red_score >= winning_scores['to change']['red']:
@@ -67,53 +64,63 @@ def get_result_raw(winning_scores, red_score):
     else:
         return "draw"
 
-def category_map(game_info, category, game_results):
+
+def category_map(generation, category):
     if category in ['players', 'vehicles', 'characters',
                     'tyres', 'gliders', ' colours',
                     'handicaps before this game', 'team colours', 'team selection']:
-        return game_info[category]
+        return generation['game info'][category]
     elif category == 'weight class':
         # characters is the map from characters to weight classes
-        return [characters[character] for character in game_info['characters']]
+        return [characters[character] for character in generation['game info']['characters']]
     elif category in spec_order:
         spec_position = spec_order[category]
-        weight_classes = [character_classes[characters[character]] for character in game_info['characters']]
+        weight_classes = [character_classes[characters[character]] for character in generation['game info']['characters']]
         stat_per_player = []
         for weight_class, vehicle, tyre, glider in zip(
             weight_classes,
-            game_info['vehicles'],
-            game_info['tyres'],
-            game_info['gliders']
+            generation['game info']['vehicles'],
+            generation['game info']['tyres'],
+            generation['game info']['gliders']
         ):
             vehicle_stats = vehicles[vehicle]
             tyre_stats = tyres[tyre]
             glider_stats = gliders[glider]
-            stat_this_player = sum([factor[spec_position] for factor in
-                [weight_class, vehicle_stats, tyre_stats, glider_stats]])
+            stat_this_player = sum(
+                [factor[spec_position] for factor in
+                    [weight_class, vehicle_stats, tyre_stats, glider_stats]]
+            )
             stat_per_player.append(stat_this_player)
         return stat_per_player
     elif category == 'vehicle class':
-        return [vehicle_classes[vehicle] for vehicle in game_info['vehicles']]
+        return [vehicle_classes[vehicle] for vehicle in generation['game info']['vehicles']]
     elif category == 'position':
         return range(1, 5)
     elif category == 'pairings':
         pairings = []
-        for player, colour in zip(range(4), game_info['team colours']):
+        for player, colour in zip(range(4), generation['game info']['team colours']):
             for potential_teammate in range(4):
                 if player != potential_teammate:
-                    if game_info['team colours'][potential_teammate] == colour:
+                    if generation['game info']['team colours'][potential_teammate] == colour:
                         pairing_players = [player + 1, potential_teammate + 1]
                         pairing_players.sort()
                         pairings.append("{} and {}".format(*pairing_players))
         return pairings
     elif category == 'time of day':
-        return [hour(game_results['time'])]*4
+        return [hour(generation['submit time'])]*4
     elif category == 'player pairings':
         pairings = []
-        for player, player_name, colour in zip(range(4), game_info['players'], game_info['team colours']):
-            for potential_teammate, teammate_name in zip(range(4), game_info['players']):
+        for player, player_name, colour in zip(
+            range(4),
+            generation['game info']['players'],
+            generation['game info']['team colours']
+        ):
+            for potential_teammate, teammate_name in zip(
+                range(4),
+                generation['game info']['players']
+            ):
                 if player != potential_teammate:
-                    if game_info['team colours'][potential_teammate] == colour:
+                    if generation['game info']['team colours'][potential_teammate] == colour:
                         pairing_players = [player_name, teammate_name]
                         pairing_players.sort()
                         pairings.append("{} and {}".format(*pairing_players))
@@ -121,22 +128,24 @@ def category_map(game_info, category, game_results):
     else:
         raise Exception("Invalid category value")
 
+
 def hour(unix_time):
     hour = format_time(unix_time).hour
     return "{} - {}".format(hour, hour + 1)
 
-def collate_completed_game(result_stats, gen_number, game_info, game_results, category):
+
+def collate_completed_game(result_stats, generation, category):
     result = get_result_raw(
         get_winning_scores(
-            game_info['team colours'],
-            game_info['handicaps before this game']
+            generation['game info']['team colours'],
+            generation['game info']['handicaps before this game']
         ),
-        game_results['red_score']
+        generation['red score']
     )
     for player_num, player, category_value, colour in zip(
-        xrange(1, 5), game_info['players'],
-        category_map(game_info, category, game_results),
-        game_info['team colours']
+        xrange(1, 5), generation['game info']['players'],
+        category_map(generation, category),
+        generation['game info']['team colours']
     ):
         # category_value typically player name but page can be hacked to do other things
 
@@ -164,16 +173,16 @@ def collate_completed_game(result_stats, gen_number, game_info, game_results, ca
             result_stats[category_value]['losses'] += 1
 
         if colour == 'red':
-            score_to_log = game_results['red_score']
+            score_to_log = generation['red score']
         else:
-            score_to_log = 410 - game_results['red_score']
+            score_to_log = 410 - generation['red score']
 
         result_stats[category_value]['scores'].append(score_to_log)
         result_stats[category_value]['scores filtered'][colour].append(score_to_log)
         result_stats[category_value]['scores filtered'][player_num].append(score_to_log)
 
         if show_separate_team_scores == 'time':
-            time_played = int(hour(game_results['time']).split(' ')[0])
+            time_played = int(hour(generation['submit time']).split(' ')[0])
             if time_played < 13:
                 time_played_category = "Before 1"
             elif time_played > 17:
@@ -190,7 +199,7 @@ def collate_completed_game(result_stats, gen_number, game_info, game_results, ca
             if 'handicaps' not in result_stats[category_value]:
                 result_stats[category_value]['handicaps'] = []
             result_stats[category_value]['handicaps'].append(
-                game_results['handicaps_after'][category_value.capitalize()]
+                generation['handicaps after'][category_value.capitalize()]
             )
 
     result_stats['total games'] += 1
@@ -198,48 +207,25 @@ def collate_completed_game(result_stats, gen_number, game_info, game_results, ca
         result_stats['red team']['won'] += 1
     elif result == 'blue':
         result_stats['blue team']['won'] += 1
-    result_stats['red team']['scores'].append(game_results['red_score'])
-    result_stats['blue team']['scores'].append(410 - game_results['red_score'])
+    result_stats['red team']['scores'].append(generation['red score'])
+    result_stats['blue team']['scores'].append(410 - generation['red score'])
 
-with open('generation_log.txt') as generation_log:
-    game_generations_raw = generation_log.readlines()
-
-with open('results_log.txt') as results_log:
-    game_results_raw = results_log.readlines()
-
-with open('players.txt') as current_handicaps_file:
-    current_handicaps_lines = current_handicaps_file.readlines()
-
-current_handicaps = {}
-for line in current_handicaps_lines:
-    player, handicap = line.strip().split(',')
-    current_handicaps[player] = handicap
-
-game_results = {}
-for result in game_results_raw:
-    gen_number, red_score, _, handicaps_after, time = eval(result)
-    game_results[gen_number] = {
-        'red_score': red_score,
-        'time': time,
-        'handicaps_after': dict(handicaps_after)
-    }
-
-game_generations_raw.reverse()
+generations = get_completed_generations_with_results(display_count)
+current_handicaps = dict(get_current_handicaps())
 
 result_stats = {
-    'total games': 0, 
-    'red team': {'won': 0, 'scores': []}, 
+    'total games': 0,
+    'red team': {'won': 0, 'scores': []},
     'blue team': {'won': 0, 'scores': []}
 }
 
 printed_game_count = 0
-for game in game_generations_raw:
-    if printed_game_count == display_count:
-        break
-    gen_number, game_info = eval(game)
-    if gen_number in game_results:
-        printed_game_count += 1
-        collate_completed_game(result_stats, gen_number, game_info, game_results[gen_number], category)
+for generation in generations:
+    collate_completed_game(
+        result_stats,
+        generation,
+        category
+    )
 
 results_table = [[
     category, 'games played', 'percentage played',

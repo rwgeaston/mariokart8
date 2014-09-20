@@ -2,10 +2,10 @@
 # -*- coding: UTF-8 -*-
 
 import cgitb
-import os
 from cgi import FieldStorage
+
 from html_tools import html_table, bold, paragraph
-from show_game_shared_code import get_winning_scores
+from mario_kart_files import get_generations
 
 #enable debugging
 cgitb.enable()
@@ -33,23 +33,26 @@ if 'display_count' in GET:
 else:
     display_count = 100
 
-with open('generation_log.txt') as generation_log:
-    game_generations_raw = generation_log.readlines()
+generations = get_generations(display_count)
 
 players = {}
 
-game_generations = [eval(line) for line in game_generations_raw]
+for generation in generations:
 
-for game_generation in game_generations:
-    gen_id, game = game_generation
-    for player, colour in zip(game['players'], game['team colours']):
+    for player, colour in zip(
+        generation['game info']['players'],
+        generation['game info']['team colours']
+    ):
         if player not in players:
             players[player] = {
-                'paired with':{},
-                'against':{},
+                'paired with': {},
+                'against': {},
             }
 
-        for player2, colour2 in zip(game['players'], game['team colours']):
+        for player2, colour2 in zip(
+            generation['game info']['players'],
+            generation['game info']['team colours']
+        ):
             if player2 == player:
                 continue
 

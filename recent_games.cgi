@@ -2,9 +2,10 @@
 # -*- coding: UTF-8 -*-
 
 import cgitb
-import os
+
 from cgi import FieldStorage
 from show_game_shared_code import format_time, get_winning_scores, get_result_string
+from mario_kart_files import get_completed_generations_with_results, get_generations_with_results
 
 #enable debugging
 cgitb.enable()
@@ -26,29 +27,46 @@ if 'display_count' in GET:
 else:
     display_count = 10
 
+
 def get_teams(game_info):
-    teams = {'red':[], 'blue':[]}
+    teams = {'red': [], 'blue': []}
     for player, team in zip(game_info['players'], game_info['team colours']):
         teams[team].append(player.capitalize())
     return ("<span class=red_team>{} and {}</span> vs <span class=blue_team>{} and {}</span>"
             .format(teams['red'][0], teams['red'][1], teams['blue'][0], teams['blue'][1]))
 
-def display_completed_game(gen_number, game_info, results):
-    scores = ("<span class=red_team>{}</span>-<span class=blue_team>{}</span>"
-              .format(results['red_score'], 410-results['red_score']))
+
+def display_completed_game(generation):
+    scores = (
+        "<span class=red_team>{}</span>-<span class=blue_team>{}</span>"
+        .format(
+            generation['red score'],
+            410 - generation['red score']
+        )
+    )
+
     result = get_result_string(
         get_winning_scores(
-            game_info['team colours'],
-            game_info['handicaps before this game']
+            generation['game info']['team colours'],
+            generation['game info']['handicaps before this game']
         ),
-        results['red_score']
+        generation['red score']
     )
-    print ('<p>{} {} {} ({}) <a href="show_game.cgi?gen={}">See details.</a> </p>'
-           .format(get_teams(game_info), scores, result, format_time(results['time']), gen_number))
+    print (
+        '<p>{} {} {} ({}) <a href="show_game.cgi?gen={}">See details.</a> </p>'
+        .format(
+            get_teams(generation['game info']),
+            scores,
+            result,
+            format_time(generation['submit time']),
+            generation['generation number']
+        )
+    )
 
-def display_non_completed_game(gen_number, game_info):
+
+def display_non_completed_game(generation):
     print ('<p>{} <a href="show_game.cgi?gen={}">See details or submit result.</a> </p>'
-           .format(get_teams(game_info), gen_number))
+           .format(get_teams(generation['game info']), generation['generation number']))
 
 print '''
 <html>
@@ -67,29 +85,16 @@ print '''
 }
 </style>'''
 
-with open('generation_log.txt') as generation_log:
-    game_generations_raw = generation_log.readlines()
+if completed_only:
+    generations = get_completed_generations_with_results(display_count)
+else:
+    generations = get_generations_with_results(display_count)
 
-with open('results_log.txt') as results_log:
-    game_results_raw = results_log.readlines()
+for generation in generations:
 
-game_results = {}
-for result in game_results_raw:
-    gen_number, red_score, _, _, time = eval(result)
-    game_results[gen_number] = {'red_score': red_score, 'time': time}
-
-game_generations_raw.reverse()
-
-printed_game_count = 0
-for game in game_generations_raw:
-    if printed_game_count == display_count:
-        break
-    gen_number, game_info = eval(game)
-    if gen_number in game_results:
-        printed_game_count += 1
-        display_completed_game(gen_number, game_info, game_results[gen_number])
+    if 'red score' in generation:
+        display_completed_game(generation)
     elif not completed_only:
-        printed_game_count += 1
-        display_non_completed_game(gen_number, game_info)
+        display_non_completed_game(generation)
 
 print '</html>'

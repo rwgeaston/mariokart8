@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
+from copy import deepcopy as copy
 
 import cgitb
-import os
 from cgi import FieldStorage
-from show_game_shared_code import format_time, get_winning_scores, get_result_string
-from vehicle_data import characters
-from html_tools import html_table, paragraph
-from copy import deepcopy as copy
+
+from show_game_shared_code import average, get_adjusted_result
+from html_tools import html_table
+from mario_kart_files import get_generations_with_results
 
 #enable debugging
 cgitb.enable()
@@ -15,13 +15,6 @@ GET = FieldStorage()
 
 print "Content-Type: text/html"
 print
-
-completed_only = 'completed_only' in GET and GET['completed_only'].value == 'true'
-
-def average(a_list):
-    if len(a_list) == 0:
-        return 0
-    return sum([float(value) for value in a_list])/len(a_list)
 
 if 'display_count' in GET:
     if GET['display_count'].value == 'all':
@@ -35,7 +28,7 @@ else:
     display_count = 'all'
 
 if 'red_handicap' in GET:
-    red_handicap = float(GET['red_handicap'].value)	
+    red_handicap = float(GET['red_handicap'].value)
 else:
     red_handicap = 0
 
@@ -59,6 +52,7 @@ if 'team_colour' in GET:
 else:
     team_colour = 'red'
 
+
 weight_class_map = {
     'babyweight': 0,
     'featherweight': 1,
@@ -68,47 +62,12 @@ weight_class_map = {
     'metalweight': 5,
     'heavyweight': 6
 }
-	
-def get_adjusted_result(gen_number, game_info, results, red_handicap):
-    winning_scores = get_winning_scores(
-        game_info['team colours'],
-        game_info['handicaps before this game']
-    )
-
-    total_red_handicap = red_handicap
-    if game_info['team colours'][0] == 'red':
-        total_red_handicap += player_1_handicap
-    else:
-        total_red_handicap -= player_1_handicap
-    red_team_net_weight_advantage = 0
-    for character, colour in zip(game_info['characters'], game_info['team colours']):
-        weight_this_character = weight_class_map[characters[character]]
-        if colour == 'red':
-            red_team_net_weight_advantage += weight_this_character
-        else:
-            red_team_net_weight_advantage -= weight_this_character
-
-    total_red_handicap += red_team_net_weight_advantage * weight_handicap
-
-    if results['red_score'] - total_red_handicap >= winning_scores['to change']['red']:
-        return 'red win', red_team_net_weight_advantage
-    elif 410 - results['red_score'] + total_red_handicap >= winning_scores['to change']['blue']:
-        return 'blue win', red_team_net_weight_advantage
-    elif results['red_score'] - total_red_handicap >= winning_scores['to win']['red']:
-        return 'red win but no change', red_team_net_weight_advantage
-    elif 410 - results['red_score'] + total_red_handicap >= winning_scores['to win']['blue']:
-        return 'blue win but no change', red_team_net_weight_advantage
-    else:
-        return 'perfect draw', red_team_net_weight_advantage
-
 
 print '''
 <html>
 <head>
 <title>MK8: Player 1 on the red team</title>
-</head>'''.format(' (completed only)' if completed_only else '')
-
-print '''
+</head>
 <style>
 .red_team {
     color: red;
@@ -119,18 +78,7 @@ print '''
 }
 </style>'''
 
-with open('generation_log.txt') as generation_log:
-    game_generations_raw = generation_log.readlines()
-
-with open('results_log.txt') as results_log:
-    game_results_raw = results_log.readlines()
-
-game_results = {}
-for result in game_results_raw:
-    gen_number, red_score, _, _, time = eval(result)
-    game_results[gen_number] = {'red_score': red_score, 'time': time}
-
-game_generations_raw.reverse()
+generations = get_completed_generations_with_results('all')
 
 results_template = {
     'red win': 0, 'blue win': 0,
@@ -149,13 +97,20 @@ results = {
 }
 
 printed_game_count = 0
-for game in game_generations_raw:
+for generation in generations:
     if printed_game_count == display_count:
         break
-    gen_number, game_info = eval(game)
-    if gen_number in game_results and game_info['team colours'][player_position - 1] == team_colour:
+
+    if ('red score' in generation and
+        generation['game info']['team colours'][player_position - 1] == team_colour):
         printed_game_count += 1
-        result, net_red_weight_advantage = get_adjusted_result(gen_number, game_info, game_results[gen_number], red_handicap)
+
+        result, net_red_weight_advantage = get_adjusted_result(
+            generation,
+            red_handicap,
+            player_1_handicap,
+            weight_handicap
+        )
 
         if net_red_weight_advantage > 5:
             category = "6 to 10"
@@ -169,9 +124,9 @@ for game in game_generations_raw:
             category = "-10 to -6"
 
         if team_colour == 'red':
-            score = game_results[gen_number]['red_score']
+            score = generation['red score']
         else:
-            score = 410 - game_results[gen_number]['red_score']
+            score = 410 - generation['red_score']
 
         results[category][result] += 1
         results['total'][result] += 1
