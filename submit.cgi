@@ -7,6 +7,7 @@ from html_tools import html_table
 from cgi import FieldStorage
 from time import time
 from show_game_shared_code import get_winning_scores
+from decay import not_recent_players
 
 #enable debugging
 cgitb.enable()
@@ -29,12 +30,16 @@ def invalid_score(message):
            .format(GET['gen'].value))
     return
 
-def handicap_change(selection, change_direction):
+def get_handicaps():
     handicaps = []
     with open('players.txt') as current_handicaps:
         for line in current_handicaps:
             player, handicap = line.strip().split(',')
             handicaps.append([player, float(handicap)])
+    return handicaps
+
+def handicap_change(selection, change_direction):
+    handicaps = get_handicaps()
 
     for player, team in zip(selection['players'], selection['team colours']):
         for person in handicaps:
@@ -55,11 +60,23 @@ def handicap_change(selection, change_direction):
     for person in handicaps:
         person[1] -= computer_handicap
 
-    # Need to sort and re-save handicaps
+    save_handicaps(handicaps)
+
+def save_handicaps(handicaps):
     sorted_handicaps = sorted(handicaps, key=lambda person: -person[1])
     with open('players.txt', 'w') as handicap_file:
         for person in sorted_handicaps:
             handicap_file.write("{},{}\n".format(*person))
+
+def decay_handicaps():
+    handicaps = get_handicaps()
+    players_to_decay = not_recent_players()
+
+    for player in handicaps:
+        if player[0] in players_to_decay and player[1] > 0:
+            player[1] -= 0.25
+
+    save_handicaps(handicaps)    
 
 def main():
     for key in ['gen', 'redscore']:
@@ -90,6 +107,9 @@ def main():
         handicap_change(selection, 1)
     elif (410 - red_score) >= scores_to_win['to change']['blue']:
         handicap_change(selection, -1)
+
+    if gen_number % 10 == 0:
+        decay_handicaps()
 
     handicaps = []
     with open('players.txt') as current_handicaps:
