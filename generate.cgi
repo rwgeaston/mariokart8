@@ -5,7 +5,7 @@ import cgitb
 import os
 from html_tools import html_table, dropdown_box
 from cgi import FieldStorage
-from random import randint, choice
+from random import randint, choice, shuffle
 import vehicle_data
 
 #enable debugging
@@ -21,24 +21,22 @@ def generation_error(message):
     return
 
 def main():
-    for key in ['1', '2', '3', '4', 'force']:
-        if key not in GET:
-            return generation_error(
-                'How did you get to this page?\n'
-                'You don\'t have the correct GET keys.'
-            )
+    if isinstance(GET['players'], list):
+        player_list = [thing.value for thing in GET['players']]
+    else:
+        player_list = [GET['players'].value]
 
     with open('players.txt') as current_handicaps_file:
         current_handicaps_raw = current_handicaps_file.readlines()
 
     current_handicaps = dict([listing.strip().split(',') for listing in current_handicaps_raw])
-    player_list = [GET[str(player_number)].value for player_number in range(1, 5)]
 
     # error checking in the GET; probably needed because ob is allowed to use this site
-    for player in current_handicaps:
-        if player_list.count(player) > 1:
-            if player != 'computer':
-                return generation_error("The same person can't play twice.")
+    if len(player_list) != 4:
+        return generation_error(
+            "You have to select exactly four players. You apparently selected: {}"
+            .format(player_list)
+        )
 
     for player in player_list:
         if player not in current_handicaps:
@@ -46,6 +44,11 @@ def main():
                 "{} is not in the handicap system."
                 .format(player.capitalize())
             )
+
+    shuffle(player_list)
+    if 'computer' in player_list:
+        player_list.remove('computer')
+        player_list.append('computer')
 
     if 'computer' in player_list:
         found_computer = False
@@ -58,13 +61,13 @@ def main():
 
     selections = {
         'players': player_list,
-        'team selection': GET['force'].value,
+        'team selection': 'random',
         'handicaps before this game': [float(current_handicaps[player]) for player in player_list]
     }
 
     # team colour selection
-    selections['team colours'] = [choice(['red', 'blue'])]
-    if GET['force'].value == 'random':
+    selections['team colours'] = [choice(['blue', 'red'])]
+    if selections['team selection'] == 'random':
         player_1_paired_with = randint(2, 4)
     else:
         player_1_paired_with = int(GET['force'].value)
