@@ -19,7 +19,7 @@ print '''
 </head>
 '''
 
-last_generation = get_generations(1)
+last_generation = get_generations(1)[0]
 
 print "{}<br />".format(last_generation['generation number'])
 
