@@ -27,7 +27,7 @@ def stats_links():
 
     links.append(''' </p> <p> 
 <a href='result_count.cgi?display_count=all&separate_team_scores=yes'>average team scores separated by position</a>
-<a href='result_count.cgi?display_count=all&separate_team_scores=yes'>by time of day</a>
+<a href='result_count.cgi?display_count=all&separate_team_scores=time'>by time of day</a>
 </p> <p> <a href="ian_page.cgi?display_count=100">
     Who has been paired with whom</a></p>
 <p><a href="score_distribution.cgi?display_count=all&range_width=5"> See score frequencies for each player </a></p>
