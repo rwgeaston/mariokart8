@@ -45,7 +45,7 @@ def get_generations_with_results(count='all', reverse_order=True, start_point=0)
 
     for generation in generations:
         if generation['generation number'] in results:
-            generation.update(results['generation number'])
+            generation.update(results[generation['generation number']])
 
     return generations
 
@@ -60,7 +60,7 @@ def get_completed_generations_with_results(count='all', reverse_order=True, star
     completed_generations = []
 
     for generation in generations:
-        if 'red score' in generations:
+        if 'red score' in generation:
             completed_generations.append(generation)
 
     return completed_generations[:count]
@@ -96,6 +96,7 @@ def append_generation(game_info):
     generation_number = get_next_generation_number()
     with open('generation_log.txt', 'a') as generation_log:
         generation_log.write('{},{}\n'.format(generation_number, game_info))
+    return generation_number
 
 
 def save_handicaps(handicaps):

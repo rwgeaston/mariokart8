@@ -84,7 +84,7 @@ def main():
     selections['tyres'] = [choice(vehicle_data.tyres.keys()) for i in range(4)]
     selections['gliders'] = [choice(vehicle_data.gliders.keys()) for i in range(4)]
 
-    append_generation(selections)
+    generation_number = append_generation(selections)
 
     print '''
 <html>

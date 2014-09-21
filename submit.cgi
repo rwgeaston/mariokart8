@@ -44,7 +44,7 @@ def handicap_change(selection, change_direction):
 
     # Find AI handicap to set it back to 0
     for person in handicaps:
-        if person[0] == 'computer':
+        if person[0].lower() == 'computer':
             computer_handicap = person[1]
             break
     else:
@@ -73,7 +73,7 @@ def main():
             print "You don't have a {} value in the GET. How did you get to this page?".format(key)
             return
 
-    generation = get_one_generation_from_gen_number(GET['gen'].value)
+    generation = get_one_generation_from_gen_number(int(GET['gen'].value))
     if not generation:
         print "I can't find that generation number. How did you get to this page?"
         return
@@ -102,7 +102,7 @@ def main():
 
     append_result(
         generation['generation number'],
-        generation['red score'],
+        red_score,
         generation['game info']['players'],
         handicaps
     )

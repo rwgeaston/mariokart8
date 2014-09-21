@@ -45,7 +45,7 @@ print '''
 <html>
 <head>
 <title>MK8: Winning Margins</title>
-</head>'''.format(' (completed only)' if completed_only else '')
+</head>'''
 
 print '''
 <style>
@@ -118,7 +118,7 @@ results_weight_map_blue = {
 printed_game_count = 0
 for generation in generations:
     result, net_red_weight_advantage = get_adjusted_result(
-        generation['generation number'],
+        generation,
         red_handicap,
         player_1_handicap,
         weight_handicap

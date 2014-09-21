@@ -7,7 +7,7 @@ from cgi import FieldStorage
 
 from show_game_shared_code import average, get_adjusted_result
 from html_tools import html_table
-from mario_kart_files import get_generations_with_results
+from mario_kart_files import get_completed_generations_with_results
 
 #enable debugging
 cgitb.enable()

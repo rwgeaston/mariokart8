@@ -32,8 +32,7 @@ if 'sort' in GET:
 
 handicaps = [["Player", "Handicap"]]
 
-for line in all_current_handicaps:
-    player, handicap = line.strip().split(',')
+for player, handicap in all_current_handicaps:
     if player in everyone_ever_played:
         handicaps.append([player.capitalize(), handicap])
 

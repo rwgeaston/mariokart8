@@ -31,8 +31,7 @@ table, select, input {
 </head>
 '''
 
-current_handicaps = get_current_handicaps()
-player_list = [listing.split(',')[0] for listing in current_handicaps]
+player_list = [player[0] for player in get_current_handicaps()]
 
 print '<form name="settings" action="generate.cgi" method="get"><br />'
 

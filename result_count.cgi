@@ -199,7 +199,7 @@ def collate_completed_game(result_stats, generation, category):
             if 'handicaps' not in result_stats[category_value]:
                 result_stats[category_value]['handicaps'] = []
             result_stats[category_value]['handicaps'].append(
-                generation['handicaps after'][category_value.capitalize()]
+                dict(generation['handicaps after'])[category_value.capitalize()]
             )
 
     result_stats['total games'] += 1
@@ -303,7 +303,7 @@ for _, player in players_show_order:
 
         if category == 'players':
             results_table[-1].extend([
-                current_handicaps[player] if player in current_handicaps else '-',
+                current_handicaps[player.capitalize()] if player.capitalize() in current_handicaps else '-',
                 round(average(result_stats[player]['handicaps']), 2),
         ])
 

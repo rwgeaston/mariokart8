@@ -76,7 +76,7 @@ def main():
         print "You don't have a gen value in the GET. How did you get to this page?"
         return
 
-    generation = get_one_generation_from_gen_number(GET['gen'].value)
+    generation = get_one_generation_from_gen_number(int(GET['gen'].value))
     if not generation:
         print "I can't find that generation number. How did you get to this page?"
         return
@@ -113,14 +113,14 @@ def main():
             )
         )
 
-    if 'red score' in generation:
-        game_not_played(GET['gen'].value)
+    if 'red score' not in generation:
+        game_not_played(int(GET['gen'].value))
     else:
         show_result(
             generation['red score'],
             generation['handicaps after'],
             winning_scores,
-            generation['time'],
+            generation['submit time'],
             generation['game info'],
             red_net_handicap,
         )
