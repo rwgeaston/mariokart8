@@ -164,22 +164,28 @@ def collate_completed_game(result_stats, generation, category, column_selection)
                     dict(generation['handicaps after'])[opponent]
                 )
 
-            result_stats[category_value]['net handicap'] += get_net_handicap(
+            net_handicap = get_net_handicap(
                 generation['game info']['team colours'],
                 generation['game info']['handicaps before this game'],
             )
 
+            result_stats[category_value]['net handicap'].append(
+                net_handicap if colour == 'red' else -net_handicap
+            )
             winning_margin = get_winning_margin(
                 winning_scores,
-                result_stats[category_value]['net handicap'],
+                net_handicap,
                 generation['red score'],
             )
 
-            result_stats[category_value]['winning margins (net)'].append(
+            if colour == 'blue':
+                winning_margin = -winning_margin
+
+            result_stats[category_value]['winning margin (net)'].append(
                 winning_margin
             )
             if colour in result:
-                result_stats[category_value]['winning margins (wins only)'].append(
+                result_stats[category_value]['winning margin (wins only)'].append(
                     winning_margin
                 )
 
@@ -293,9 +299,9 @@ for _, player in players_show_order:
             round(average(result_stats[player]['handicaps']), 2),
             round(average(result_stats[player]['teammate handicaps']), 2),
             round(average(result_stats[player]['opponent handicaps']), 2),
-            result_stats[player]['net handicap'],
-            result_stats[player]['winning margins (net)'],
-            result_stats[player]['winning margins (wins only)'],
+            round(average(result_stats[player]['net handicap']), 2),
+            round(average(result_stats[player]['winning margin (net)']), 2),
+            round(average(result_stats[player]['winning margin (wins only)']), 2),
         ])
     else:
         results_table[-1].extend([
