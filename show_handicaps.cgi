@@ -17,10 +17,10 @@ print
 all_current_handicaps = get_current_handicaps()
 everyone_ever_played = set()
 
-generations = get_generations_with_results()
+generations = get_generations_with_results("all")
 for generation in generations:
-    if 'red score' in generations:
-        everyone_ever_played.update(generation['game info']['players'])
+    if 'red score' in generation:
+        everyone_ever_played.update([player.capitalize() for player in generation['game info']['players']])
 
 if 'sort' in GET:
     if GET['sort'].value == 'alphabetical':
