@@ -283,14 +283,14 @@ page_content = [
     ("table", results_table)
 ]
 
-for team in ['red', 'blue']:
+for team in ['red team', 'blue team']:
     page_content.append((
         'text',
-        "{} team has won {} times and has had an average team score of {}."
+        "{} has won {} times and has had an average team score of {}."
         .format(
-            team,
-            result_stats[team.capitalize() + ' team']['won'],
-            round(average(result_stats[team + ' team']['scores']), 1),
+            team.capitalize(),
+            result_stats[team]['won'],
+            round(average(result_stats[team]['scores']), 1),
         )
     ))
 
