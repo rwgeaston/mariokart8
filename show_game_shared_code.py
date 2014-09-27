@@ -31,6 +31,7 @@ def show_selection(selection, player_number):
         glider=selection['gliders'][player_number]
     )
 
+
 def selection_stats(selection, player_number):
     weight_class = vehicle_data.characters[selection['characters'][player_number]]
     player_stats = vehicle_data.character_classes[weight_class]
@@ -39,12 +40,15 @@ def selection_stats(selection, player_number):
     glider_stats = vehicle_data.gliders[selection['gliders'][player_number]]
     overall_stats = map(sum, zip(player_stats, vehicle_stats, tyre_stats, glider_stats))
     overall_stats_strings = [str(element) for element in overall_stats]
-    return ["<p class='{team_colour}_team'>{player_name}</p>"
-            .format(
-                team_colour=selection['team colours'][player_number],
-                player_name=selection['players'][player_number].capitalize()),
-            str(selection['handicaps before this game'][player_number])] + \
-            overall_stats_strings
+    return ([
+        "<p class='{team_colour}_team'>{player_name}</p>"
+        .format(
+            team_colour=selection['team colours'][player_number],
+            player_name=selection['players'][player_number].capitalize()
+        ),
+        str(selection['handicaps before this game'][player_number])
+    ] + overall_stats_strings)
+
 
 def show_game_shared(selection):
     print html_table([
@@ -59,6 +63,7 @@ def show_game_shared(selection):
         [selection_stats(selection, player_number) for player_number in range(4)]
     )
 
+
 def get_winning_scores(team_colours, handicaps):
     net_red_handicap = get_net_handicap(team_colours, handicaps)
     winning_scores = get_winning_scores_raw(net_red_handicap)
@@ -66,6 +71,7 @@ def get_winning_scores(team_colours, handicaps):
         for colour in ['red', 'blue']:
             winning_scores[result][colour] = int(ceil(winning_scores[result][colour]))
     return winning_scores
+
 
 def get_winning_scores_raw(net_red_handicap):
     return {
@@ -79,6 +85,7 @@ def get_winning_scores_raw(net_red_handicap):
         }
     }
 
+
 def get_net_handicap(team_colours, handicaps):
     net_red_handicap = 0
     for player_num in range(4):
@@ -87,6 +94,35 @@ def get_net_handicap(team_colours, handicaps):
         else:
             net_red_handicap -= handicaps[player_num]
     return net_red_handicap
+
+
+def teammate(game_info, player):
+    """Returns the other player on the same team as this player"""
+    colour_to_match = game_info['team colours'][game_info['players'].index(player)]
+    for second_player, colour in zip(game_info['players'], game_info['team colours']):
+        if colour_to_match == colour and second_player != player:
+            return second_player
+    raise Exception(
+        "Didn't find a second player with matching team colour. {} {}"
+        .format(player, game_info)
+    )
+
+
+def opponents(game_info, player):
+    """Returns the players not on the same team as this player"""
+    colour_to_match = game_info['team colours'][game_info['players'].index(player)]
+    opponents = []
+    for second_player, colour in zip(game_info['players'], game_info['team colours']):
+        if colour_to_match != colour and second_player != player:
+            opponents.append(second_player)
+    if len(opponents) != 2:
+        raise Exception(
+            "Didn't find a second player with matching team colour? {} {}"
+            .format(player, game_info)
+        )
+    else:
+        return opponents
+
 
 def format_time(unix_time):
     time_split = localtime(unix_time)
@@ -98,6 +134,7 @@ def format_time(unix_time):
         time_split.tm_min,
         time_split.tm_sec
     )
+
 
 def get_result(winning_scores, red_score):
     if red_score >= winning_scores['to change']['red']:
@@ -111,6 +148,7 @@ def get_result(winning_scores, red_score):
     else:
         return "draw"
 
+
 def get_winning_margin(winning_scores, net_red_handicap, red_score):
     result = get_result(winning_scores, red_score)
     net_score = red_score * 2 - net_red_handicap * 5 - 410
@@ -121,6 +159,7 @@ def get_winning_margin(winning_scores, net_red_handicap, red_score):
     else:
         return 0
 
+
 def get_winning_margin_string(winning_scores, net_red_handicap, red_score):
     result = get_result(winning_scores, red_score)
     if result == 'draw':
@@ -129,6 +168,7 @@ def get_winning_margin_string(winning_scores, net_red_handicap, red_score):
         return "Red team wins by {} points".format(get_winning_margin(winning_scores, net_red_handicap, red_score))
     else:
         return "Blue team wins by {} points".format(get_winning_margin(winning_scores, net_red_handicap, red_score))
+
 
 def get_result_string(winning_scores, red_score):
     pretty_strings = {
