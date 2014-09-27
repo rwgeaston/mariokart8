@@ -112,6 +112,6 @@ def get_current_handicaps():
     with open('players.txt') as current_handicaps:
         for line in current_handicaps:
             player, handicap = line.strip().split(',')
-            handicaps.append([player.capitalize(), float(handicap)])
+            handicaps.append([player, float(handicap)])
 
     return handicaps

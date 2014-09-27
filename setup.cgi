@@ -46,7 +46,7 @@ for player in sorted(player_list):
     checkboxes[-1].append(
         '<input type="checkbox" name="players" value="{player}"'
         ' id="{player}"><label for="{player}">{player_caps}</label><br>'
-        .format(player=player, player_caps=player.capitalize()))
+        .format(player=player, player_caps=player))
 
 print html_table(checkboxes)
 print '''<input type="submit" value="Generate teams"></form>'''

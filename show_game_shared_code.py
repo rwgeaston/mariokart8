@@ -23,7 +23,7 @@ def show_selection(selection, player_number):
 {vehicle}<br />
 {tyres}<br />
 {glider}<br /></p>'''.format(
-        player=selection['players'][player_number].capitalize(),
+        player=selection['players'][player_number],
         team_colour=selection['team colours'][player_number],
         character=selection['characters'][player_number],
         vehicle=selection['vehicles'][player_number],
@@ -44,7 +44,7 @@ def selection_stats(selection, player_number):
         "<p class='{team_colour}_team'>{player_name}</p>"
         .format(
             team_colour=selection['team colours'][player_number],
-            player_name=selection['players'][player_number].capitalize()
+            player_name=selection['players'][player_number]
         ),
         str(selection['handicaps before this game'][player_number])
     ] + overall_stats_strings)

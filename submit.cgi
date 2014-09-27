@@ -44,7 +44,7 @@ def handicap_change(selection, change_direction):
 
     # Find AI handicap to set it back to 0
     for person in handicaps:
-        if person[0].lower() == 'computer':
+        if person[0] == 'computer':
             computer_handicap = person[1]
             break
     else:

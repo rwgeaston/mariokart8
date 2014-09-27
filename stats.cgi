@@ -157,16 +157,16 @@ def collate_completed_game(result_stats, generation, category, column_selection)
                     result_stats[category_value][stat] = []
 
             result_stats[category_value]['handicaps'].append(
-                dict(generation['handicaps after'])[category_value.capitalize()]
+                dict(generation['handicaps after'])[category_value]
             )
 
             result_stats[category_value]['teammate handicaps'].append(
-                dict(generation['handicaps after'])[teammate(generation['game info'], category_value).capitalize()]
+                dict(generation['handicaps after'])[teammate(generation['game info'], category_value)]
             )
 
             for opponent in opponents(generation['game info'], category_value):
                 result_stats[category_value]['opponent handicaps'].append(
-                    dict(generation['handicaps after'])[opponent.capitalize()]
+                    dict(generation['handicaps after'])[opponent]
                 )
 
     result_stats['total games'] += 1
@@ -268,8 +268,8 @@ for _, player in players_show_order:
             )
     elif form_values['column_selection'] == 'extra_player_stats':
         results_table[-1].extend([
-            (current_handicaps[player.capitalize()]
-             if player.capitalize() in current_handicaps else '-'),
+            (current_handicaps[player]
+             if player in current_handicaps else '-'),
             round(average(result_stats[player]['handicaps']), 2),
             round(average(result_stats[player]['teammate handicaps']), 2),
             round(average(result_stats[player]['opponent handicaps']), 2),
@@ -286,8 +286,8 @@ for _, player in players_show_order:
 
         if form_values['category'] == 'players':
             results_table[-1].append(
-                current_handicaps[player.capitalize()]
-                if player.capitalize() in current_handicaps else '-',
+                current_handicaps[player]
+                if player in current_handicaps else '-',
             )
 
 page_content = [
@@ -299,7 +299,7 @@ for team in ['red', 'blue']:
         'text',
         "{} team has won {} times and has had an average team score of {}."
         .format(
-            team.capitalize(),
+            team,
             result_stats[team + ' team']['won'],
             round(average(result_stats[team + ' team']['scores']), 1),
         )

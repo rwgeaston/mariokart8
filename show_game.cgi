@@ -53,7 +53,7 @@ def show_result(red_score, result_handicaps, winning_scores, time, game_info, ne
 
     handicaps_after_this_game = [["Player", "Handicap"]]
     for player, handicap in result_handicaps:
-        handicaps_after_this_game.append([player.capitalize(), handicap])
+        handicaps_after_this_game.append([player, handicap])
 
     print paragraph(html_table(handicaps_after_this_game))
 

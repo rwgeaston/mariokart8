@@ -24,9 +24,9 @@ def generation_error(message):
 
 def main():
     if isinstance(GET['players'], list):
-        player_list = [thing.value.lower() for thing in GET['players']]
+        player_list = [player.value for player in GET['players']]
     else:
-        player_list = [player.lower() for player in GET['players'].value]
+        player_list = [player for player in GET['players'].value]
 
     current_handicaps = dict(get_current_handicaps())
 
@@ -41,7 +41,7 @@ def main():
         if player not in current_handicaps:
             return generation_error(
                 "{} is not in the handicap system."
-                .format(player.capitalize())
+                .format(player)
             )
 
     shuffle(player_list)
@@ -61,7 +61,7 @@ def main():
     selections = {
         'players': player_list,
         'team selection': 'random',
-        'handicaps before this game': [float(current_handicaps[player.capitalize()]) for player in player_list]
+        'handicaps before this game': [float(current_handicaps[player]) for player in player_list]
     }
 
     # team colour selection

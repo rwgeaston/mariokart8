@@ -69,7 +69,7 @@ def category_map(generation, category):
     if category in ['players', 'vehicles', 'characters',
                     'tyres', 'gliders', ' colours',
                     'handicaps before this game', 'team colours', 'team selection']:
-        return [value.capitalize() for value in generation['game info'][category]]
+        return [value for value in generation['game info'][category]]
     elif category == 'weight class':
         # characters is the map from characters to weight classes
         return [characters[character] for character in generation['game info']['characters']]
@@ -199,7 +199,7 @@ def collate_completed_game(result_stats, generation, category):
             if 'handicaps' not in result_stats[category_value]:
                 result_stats[category_value]['handicaps'] = []
             result_stats[category_value]['handicaps'].append(
-                dict(generation['handicaps after'])[category_value.capitalize()]
+                dict(generation['handicaps after'])[category_value]
             )
 
     result_stats['total games'] += 1
@@ -303,7 +303,7 @@ for _, player in players_show_order:
 
         if category == 'players':
             results_table[-1].extend([
-                current_handicaps[player.capitalize()] if player.capitalize() in current_handicaps else '-',
+                current_handicaps[player] if player in current_handicaps else '-',
                 round(average(result_stats[player]['handicaps']), 2),
         ])
 
@@ -313,8 +313,8 @@ for team in ['red', 'blue']:
     print paragraph(
         "{} team has won {} times and has had an average team score of {}."
         .format(
-            team.capitalize(),
-            result_stats[team + ' team']['won'],
+            team,
+            result_stats[team.capitalize() + ' team']['won'],
             round(average(result_stats[team + ' team']['scores']), 1),
         )
     )

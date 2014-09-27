@@ -31,7 +31,7 @@ else:
 def get_teams(game_info):
     teams = {'red': [], 'blue': []}
     for player, team in zip(game_info['players'], game_info['team colours']):
-        teams[team].append(player.capitalize())
+        teams[team].append(player)
     return ("<span class=red_team>{} and {}</span> vs <span class=blue_team>{} and {}</span>"
             .format(teams['red'][0], teams['red'][1], teams['blue'][0], teams['blue'][1]))
 
