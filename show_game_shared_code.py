@@ -150,14 +150,7 @@ def get_result(winning_scores, red_score):
 
 
 def get_winning_margin(winning_scores, net_red_handicap, red_score):
-    result = get_result(winning_scores, red_score)
-    net_score = red_score * 2 - net_red_handicap * 5 - 410
-    if 'red' in result:
-        return net_score
-    elif 'blue' in result:
-        return - net_score
-    else:
-        return 0
+    return red_score * 2 - net_red_handicap * 5 - 410
 
 
 def get_winning_margin_string(winning_scores, net_red_handicap, red_score):
@@ -165,9 +158,11 @@ def get_winning_margin_string(winning_scores, net_red_handicap, red_score):
     if result == 'draw':
         return ""
     elif 'red' in result:
-        return "Red team wins by {} points".format(get_winning_margin(winning_scores, net_red_handicap, red_score))
+        return "Red team wins by {} points".format(
+            get_winning_margin(winning_scores, net_red_handicap, red_score))
     else:
-        return "Blue team wins by {} points".format(get_winning_margin(winning_scores, net_red_handicap, red_score))
+        return "Blue team wins by {} points".format(
+            -get_winning_margin(winning_scores, net_red_handicap, red_score))
 
 
 def get_result_string(winning_scores, red_score):
@@ -217,7 +212,7 @@ def get_result_extra_handicaps(game_info, red_score):
 
     winning_scores = get_winning_scores_raw(net_red_handicap)
     result = get_result(winning_scores, red_score)
-    margin = get_winning_margin(winning_scores, net_red_handicap, red_score)
+    margin = abs(get_winning_margin(winning_scores, net_red_handicap, red_score))
 
     if result == 'draw':
         result_string = "With this adjustment game would have been a perfect draw"

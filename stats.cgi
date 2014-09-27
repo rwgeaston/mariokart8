@@ -2,7 +2,7 @@
 # -*- coding: UTF-8 -*-
 from standard_page import print_page, get_form_values
 from show_game_shared_code import get_winning_scores, format_time, average, \
-    get_result, opponents, teammate
+    get_result, opponents, teammate, get_net_handicap, get_winning_margin
 from vehicle_data import characters, spec_order, character_classes, vehicles, \
     tyres, gliders, vehicle_classes
 from mario_kart_files import get_completed_generations_with_results, get_current_handicaps
@@ -80,12 +80,13 @@ def hour(unix_time):
 
 
 def collate_completed_game(result_stats, generation, category, column_selection):
+    winning_scores = get_winning_scores(
+        generation['game info']['team colours'],
+        generation['game info']['handicaps before this game']
+    )
     result = get_result_raw(
-        get_winning_scores(
-            generation['game info']['team colours'],
-            generation['game info']['handicaps before this game']
-        ),
-        generation['red score']
+        winning_scores,
+        generation['red score'],
     )
     for player_num, player, category_value, colour in zip(
         xrange(1, 5), generation['game info']['players'],
@@ -140,7 +141,13 @@ def collate_completed_game(result_stats, generation, category, column_selection)
             result_stats[category_value]['scores filtered time'][time_played_category].append(score_to_log)
 
         if category == 'players':
-            for stat in ['handicaps', 'teammate handicaps', 'opponent handicaps']:
+            for stat in [
+                'handicaps',
+                'teammate handicaps',
+                'opponent handicaps',
+                'net handicap',
+                'winning margin (net)',
+                'winning margin (wins only)']:
                 if stat not in result_stats[category_value]:
                     result_stats[category_value][stat] = []
 
@@ -155,6 +162,25 @@ def collate_completed_game(result_stats, generation, category, column_selection)
             for opponent in opponents(generation['game info'], category_value):
                 result_stats[category_value]['opponent handicaps'].append(
                     dict(generation['handicaps after'])[opponent]
+                )
+
+            result_stats[category_value]['net handicap'] += get_net_handicap(
+                generation['game info']['team colours'],
+                generation['game info']['handicaps before this game'],
+            )
+
+            winning_margin = get_winning_margin(
+                winning_scores,
+                result_stats[category_value]['net handicap'],
+                generation['red score'],
+            )
+
+            result_stats[category_value]['winning margins (net)'].append(
+                winning_margin
+            )
+            if colour in result:
+                result_stats[category_value]['winning margins (wins only)'].append(
+                    winning_margin
                 )
 
     result_stats['total games'] += 1
@@ -199,7 +225,9 @@ elif form_values['column_selection'] == 'extra_player_stats':
         'current handicap',
         'average handicap',
         'average teammate handicap',
-        'average opponent handicap'
+        'average opponent handicap',
+        'winning margin (net)',
+        'winning margin (wins only)'
     ])
 else:
     results_table[0].extend([
@@ -264,6 +292,8 @@ for _, player in players_show_order:
             round(average(result_stats[player]['handicaps']), 2),
             round(average(result_stats[player]['teammate handicaps']), 2),
             round(average(result_stats[player]['opponent handicaps']), 2),
+            result_stats[player]['winning margins (net)'],
+            result_stats[player]['winning margins (wins only)'],
         ])
     else:
         results_table[-1].extend([
