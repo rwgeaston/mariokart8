@@ -12,6 +12,8 @@ GET = FieldStorage()
 
 def print_page(title, page_content):
     print '''Content-Type: text/html
+
+
 <html>
 <head>
 <title>MK8: {}</title>
