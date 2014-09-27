@@ -193,8 +193,9 @@ if form_values['column_selection'] == 'yes':
         results_table[0].append('average team score when player {}'.format(player_num))
 elif form_values['column_selection'] == 'time':
     results_table[0].extend(['Before 1', '1-2', '2-4', '4-6', 'After 6'])
-elif form_values['column_selection'] == 'extra_player_statistics':
+elif form_values['column_selection'] == 'extra_player_stats':
     results_table[0].extend([
+        'average team score',
         'current handicap',
         'average handicap',
         'average teammate handicap',
@@ -257,6 +258,7 @@ for _, player in players_show_order:
             )
     elif form_values['column_selection'] == 'extra_player_stats':
         results_table[-1].extend([
+            round(average(result_stats[player]['scores']), 1),
             (current_handicaps[player]
              if player in current_handicaps else '-'),
             round(average(result_stats[player]['handicaps']), 2),
