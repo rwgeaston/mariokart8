@@ -162,7 +162,11 @@ def collate_completed_game(result_stats, generation, category, column_selection)
 
             result_stats[category_value]['teammate handicaps'].append(
 <<<<<<< HEAD
+<<<<<<< HEAD
                 dict(generation['handicaps after'])[teammate(generation['game info'], category_value)]
+=======
+                dict(generation['handicaps after'])[teammate(generation['game info'], category_value.lower()).capitalize()]
+>>>>>>> 351ea71de93a2615b3377166cfc52e9c5bd9eae4
 =======
                 dict(generation['handicaps after'])[teammate(generation['game info'], category_value.lower()).capitalize()]
 >>>>>>> 351ea71de93a2615b3377166cfc52e9c5bd9eae4
