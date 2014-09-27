@@ -23,7 +23,7 @@ def category_map(generation, category):
     if category in ['players', 'vehicles', 'characters',
                     'tyres', 'gliders', ' colours',
                     'handicaps before this game', 'team colours', 'team selection']:
-        return [value.capitalize() for value in generation['game info'][category]]
+        return [value for value in generation['game info'][category]]
     elif category == 'weight class':
         # characters is the map from characters to weight classes
         return [characters[character] for character in generation['game info']['characters']]
@@ -341,5 +341,4 @@ else:
     game_count_message += "."
 
 page_content.append(('text', game_count_message))
-
 print_page("Show result stats", page_content)
