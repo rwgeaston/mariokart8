@@ -152,7 +152,7 @@ def collate_completed_game(result_stats, generation, category, column_selection)
                 dict(generation['handicaps after'])[teammate(generation['game info'], category_value)]
             )
 
-            for opponent in opponents(generation['game info'], category_value.lower()):
+            for opponent in opponents(generation['game info'], category_value):
                 result_stats[category_value]['opponent handicaps'].append(
                     dict(generation['handicaps after'])[opponent]
                 )
