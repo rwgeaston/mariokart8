@@ -14,18 +14,6 @@ form_values = get_form_values([
     ('sort', 'games played', str)
 ])
 
-if (form_values['column_selection'] not in
-    ['standard', 'positions', 'time', 'extra_player_stats'] or
-    (form_values['column_selection'] == 'extra_player_stats' and
-     form_values['category'] != 'players')):
-    form_values['column_selection'] = 'standard'
-
-if form_values['sort'] not in [
-    form_values['category'], 'average team score', 'current handicap',
-    'wins', 'draws', 'losses', 'average handicap'
-]:
-    form_values['sort'] = form_values['category']
-
 
 def get_result_raw(winning_scores, red_score):
     return get_result(winning_scores, red_score).split(' ')[0]
@@ -301,7 +289,7 @@ for team in ['red', 'blue']:
         "{} team has won {} times and has had an average team score of {}."
         .format(
             team,
-            result_stats[team + ' team']['won'],
+            result_stats[team.capitalize() + ' team']['won'],
             round(average(result_stats[team + ' team']['scores']), 1),
         )
     ))
