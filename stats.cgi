@@ -226,6 +226,7 @@ elif form_values['column_selection'] == 'extra_player_stats':
         'average handicap',
         'average teammate handicap',
         'average opponent handicap',
+        'net handicap',
         'winning margin (net)',
         'winning margin (wins only)'
     ])
@@ -292,6 +293,7 @@ for _, player in players_show_order:
             round(average(result_stats[player]['handicaps']), 2),
             round(average(result_stats[player]['teammate handicaps']), 2),
             round(average(result_stats[player]['opponent handicaps']), 2),
+            result_stats[player]['net handicap'],
             result_stats[player]['winning margins (net)'],
             result_stats[player]['winning margins (wins only)'],
         ])
