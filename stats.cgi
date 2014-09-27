@@ -35,7 +35,7 @@ def category_map(generation, category):
     if category in ['players', 'vehicles', 'characters',
                     'tyres', 'gliders', ' colours',
                     'handicaps before this game', 'team colours', 'team selection']:
-        return generation['game info'][category]
+        return [value.capitalize() for value in generation['game info'][category]]
     elif category == 'weight class':
         # characters is the map from characters to weight classes
         return [characters[character] for character in generation['game info']['characters']]
@@ -161,10 +161,14 @@ def collate_completed_game(result_stats, generation, category, column_selection)
             )
 
             result_stats[category_value]['teammate handicaps'].append(
+<<<<<<< HEAD
                 dict(generation['handicaps after'])[teammate(generation['game info'], category_value)]
+=======
+                dict(generation['handicaps after'])[teammate(generation['game info'], category_value.lower()).capitalize()]
+>>>>>>> 351ea71de93a2615b3377166cfc52e9c5bd9eae4
             )
 
-            for opponent in opponents(generation['game info'], category_value):
+            for opponent in opponents(generation['game info'], category_value.lower()):
                 result_stats[category_value]['opponent handicaps'].append(
                     dict(generation['handicaps after'])[opponent]
                 )
@@ -191,7 +195,8 @@ for generation in generations:
     collate_completed_game(
         result_stats,
         generation,
-        form_values['category']
+        form_values['category'],
+        form_values['column_selection'],
     )
 
 results_table = [[
