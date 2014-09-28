@@ -219,7 +219,7 @@ results_table = [[
     form_values['category'], 'games played', 'percentage played',
 ]]
 
-if form_values['column_selection'] == 'yes':
+if form_values['column_selection'] == 'teams':
     results_table[0].extend(['average team score', 'average red team score', 'average blue team score'])
     for player_num in range(1, 5):
         results_table[0].append('average team score when player {}'.format(player_num))
@@ -274,7 +274,7 @@ for _, player in players_show_order:
         result_stats[player]['played'] * 100 / result_stats['total games'],
     ])
 
-    if form_values['column_selection'] == 'yes':
+    if form_values['column_selection'] == 'team':
         results_table[-1].append(round(average(result_stats[player]['scores']), 1))
         for filter in ['red', 'blue'] + range(1, 5):
             results_table[-1].append(
