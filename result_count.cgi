@@ -149,7 +149,7 @@ def collate_completed_game(result_stats, generation, category):
     ):
         # category_value typically player name but page can be hacked to do other things
 
-        if category != 'players' and player == 'computer':
+        if category != 'players' and player == 'Computer':
             continue
 
         if category_value not in result_stats:

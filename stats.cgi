@@ -94,7 +94,7 @@ def collate_completed_game(result_stats, generation, category, column_selection)
         generation['game info']['team colours']
     ):
 
-        if category != 'players' and player == 'computer':
+        if category != 'players' and player == 'Computer':
             continue
 
         if category_value not in result_stats:

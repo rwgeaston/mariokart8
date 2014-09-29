@@ -45,17 +45,17 @@ def main():
             )
 
     shuffle(player_list)
-    if 'computer' in player_list:
-        player_list.remove('computer')
-        player_list.append('computer')
+    if 'Computer' in player_list:
+        player_list.remove('Computer')
+        player_list.append('Computer')
 
-    if 'computer' in player_list:
+    if 'Computer' in player_list:
         found_computer = False
         for player in range(4):
             if found_computer:
-                if player_list[player] != 'computer':
+                if player_list[player] != 'Computer':
                     return generation_error("AI players must be bottom right first.")
-            elif player_list[player] == 'computer':
+            elif player_list[player] == 'Computer':
                 found_computer = True
 
     selections = {
