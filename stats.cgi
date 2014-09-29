@@ -88,6 +88,9 @@ def collate_completed_game(result_stats, generation, category, column_selection)
         winning_scores,
         generation['red score'],
     )
+
+    handicaps_after = dict(generation['handicaps after'])
+
     for player_num, player, category_value, colour in zip(
         xrange(1, 5), generation['game info']['players'],
         category_map(generation, category),
@@ -146,22 +149,28 @@ def collate_completed_game(result_stats, generation, category, column_selection)
                 'teammate handicaps',
                 'opponent handicaps',
                 'net handicap',
+                'handicap leader gap',
                 'winning margin (net)',
-                'winning margin (wins only)']:
+                'winning margin (wins only)'
+            ]:
                 if stat not in result_stats[category_value]:
                     result_stats[category_value][stat] = []
 
             result_stats[category_value]['handicaps'].append(
-                dict(generation['handicaps after'])[category_value]
+                handicaps_after[category_value]
+            )
+
+            result_stats[category_value]['handicap leader gap'].append(
+                max(handicaps_after.values()) - handicaps_after[category_value]
             )
 
             result_stats[category_value]['teammate handicaps'].append(
-                dict(generation['handicaps after'])[teammate(generation['game info'], category_value)]
+                handicaps_after[teammate(generation['game info'], category_value)]
             )
 
             for opponent in opponents(generation['game info'], category_value):
                 result_stats[category_value]['opponent handicaps'].append(
-                    dict(generation['handicaps after'])[opponent]
+                    handicaps_after[opponent]
                 )
 
             net_handicap = get_net_handicap(
@@ -232,6 +241,7 @@ elif form_values['column_selection'] == 'extra_player_stats':
         'average handicap',
         'average teammate handicap',
         'average opponent handicap',
+        'average handicap gap from leader',
         'net handicap',
         'winning margin (net)',
         'winning margin (wins only)'
@@ -299,6 +309,7 @@ for _, player in players_show_order:
             round(average(result_stats[player]['handicaps']), 2),
             round(average(result_stats[player]['teammate handicaps']), 2),
             round(average(result_stats[player]['opponent handicaps']), 2),
+            round(average(result_stats[player]['handicap leader gap']), 2),
             round(average(result_stats[player]['net handicap']), 2),
             round(average(result_stats[player]['winning margin (net)']), 2),
             round(average(result_stats[player]['winning margin (wins only)']), 2),
