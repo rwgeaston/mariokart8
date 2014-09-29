@@ -89,7 +89,9 @@ def collate_completed_game(result_stats, generation, category, column_selection)
         generation['red score'],
     )
 
-    handicaps_after = dict(generation['handicaps after'])
+    handicaps_after = dict(
+        [(name, float(handicap)) for name, handicap in generation['handicaps after']]
+    )
 
     for player_num, player, category_value, colour in zip(
         xrange(1, 5), generation['game info']['players'],
