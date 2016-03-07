@@ -64,12 +64,23 @@ def main():
         'handicaps before this game': [float(current_handicaps[player]) for player in player_list]
     }
 
+    if 'force' in GET:
+        selections['team selection'] = 'forced'
+
     # team colour selection
     selections['team colours'] = [choice(['blue', 'red'])]
     if selections['team selection'] == 'random':
         player_1_paired_with = randint(2, 4)
     else:
-        player_1_paired_with = int(GET['force'].value)
+        alphabetically_first_player = min(player_list)
+        alphabetically_first_index = player_list.index(alphabetically_first_player)
+        pair_index = player_list.index(GET['force'].value)
+        if alphabetically_first_index == 1:
+            player_1_paired_with = pair_index + 1
+        elif pair_index == 1:
+            player_1_paired_with = alphabetically_first_index + 1
+        else:
+            player_1_paired_with = (set([2, 3, 4]) - set([pair_index, alphabetically_first_index])).pop() 
 
     for player in range(2, 5):
         if player_1_paired_with == player:
