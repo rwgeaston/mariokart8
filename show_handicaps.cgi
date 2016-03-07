@@ -6,6 +6,7 @@ from cgi import FieldStorage
 
 from html_tools import html_table
 from mario_kart_files import get_current_handicaps, get_generations_with_results
+from decay import recent_players
 
 #enable debugging
 cgitb.enable()
@@ -15,12 +16,6 @@ print "Content-Type: text/html"
 print
 
 all_current_handicaps = get_current_handicaps()
-everyone_ever_played = set()
-
-generations = get_generations_with_results("all")
-for generation in generations:
-    if 'red score' in generation:
-        everyone_ever_played.update([player for player in generation['game info']['players']])
 
 if 'sort' in GET:
     if GET['sort'].value == 'alphabetical':
@@ -30,10 +25,22 @@ if 'sort' in GET:
     elif GET['sort'].value == 'worst':
         all_current_handicaps.reverse()
 
+if 'display_count' in GET:
+    if GET['display_count'].value == 'all':
+        display_count = 10000
+    else:
+        try:
+            display_count = int(GET['display_count'].value)
+        except ValueError:
+            display_count = 50
+else:
+    display_count = 50
+
 handicaps = [["Player", "Handicap"]]
+recent = recent_players(game_count=display_count)
 
 for player, handicap in all_current_handicaps:
-    if player in everyone_ever_played:
+    if player in recent:
         handicaps.append([player, handicap])
 
 if 'machine_readable' in GET:
