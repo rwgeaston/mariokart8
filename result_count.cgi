@@ -2,6 +2,7 @@
 # -*- coding: UTF-8 -*-
 import cgitb
 from cgi import FieldStorage
+from datetime import datetime
 
 from html_tools import html_table, paragraph
 from show_game_shared_code import get_winning_scores, format_time, average
@@ -46,6 +47,8 @@ if 'separate_team_scores' in GET:
         show_separate_team_scores = 'yes'
     elif GET['separate_team_scores'].value == 'time':
         show_separate_team_scores = 'time'
+    elif GET['separate_team_scores'].value == 'ian':
+        show_separate_team_scores = 'ian'
 
 sort = 'games played'
 if 'sort' in GET:
@@ -108,6 +111,8 @@ def category_map(generation, category):
         return pairings
     elif category == 'time of day':
         return [hour(generation['submit time'])]*4
+    elif category == 'weekday':
+        return [day_of_the_week(generation['submit time'])]*4
     elif category == 'player pairings':
         pairings = []
         for player, player_name, colour in zip(
@@ -125,14 +130,57 @@ def category_map(generation, category):
                         pairing_players.sort()
                         pairings.append("{} and {}".format(*pairing_players))
         return pairings
+    elif category == 'oldscrumteams':
+        teams = [get_scrum_team(player) for player in generation['game info']['players']]
+        return teams  
+    elif category == 'scrumteams':
+        teams = [get_new_scrum_team(player) for player in generation['game info']['players']]
+        return teams
     else:
         raise Exception("Invalid category value")
 
+def get_scrum_team(player):
+    scrum_team_map = {
+        'RED': ['Andy', 'Sid', 'Oliver', 'Will', 'Simon', 'Anand'],
+        'McFly': ['Ian', 'Guy', 'Shamayl', 'Christina'],
+        'Tools': ['Rob', 'Colin', 'Jamie', 'Christian', 'Filla'],
+        'Edonus': ['Uma', 'Paulin', 'Gordon', 'Tomg', 'Joe', 'Robh'],
+        'Pug': ['Arvinda', 'Martha', 'Thomas'],
+        'Transformers': ['Johan', 'Eirik', 'Ben', 'Mate', 'Luca'],
+        'Computer': ['Computer'],
+        'Media': ['James', 'Gabriel', 'Karlis'],
+        'Other': ['Mark', 'Victor', 'Alex', 'Sirisha', 'Lisa'],
+    }
+    for team, members in scrum_team_map.iteritems():
+        if player in members:
+            return team
+    raise Exception("Don't know what scrum team this person is on: {}".format(player))
+
+def get_new_scrum_team(player):
+    scrum_team_map = {
+        'Martell': ['Gabriel', 'James', 'Karlis'],
+        'Lannister': ['Thomas', 'Simon', 'Guy', 'Filla', 'Mate'],
+        'Dayne': ['Rob', 'Uma', 'Tomg', 'Martha', 'Anand'],
+        'Stark': ['Sid', 'Sirisha', 'Arvinda', 'Ben'],
+        'Wildlings': ['Mark', 'Gordon', 'Joe', 'Johan', 'Eirik', 'Robh', 'Paulin'],
+        'X-Wing': ['Andy', 'Will', 'Colin'],
+        'Jar-Jar': ['Ian', 'Shamayl'],
+        'Computer': ['Computer'],
+        'Other': ['Victor', 'Alex', 'Lisa', 'Jamie', 'Christian', 'Luca', 'Oliver', 'Christina'],
+    }
+    for team, members in scrum_team_map.iteritems():
+        if player in members:
+            return team
+    raise Exception("Don't know what scrum team this person is on: {}".format(player))
 
 def hour(unix_time):
     hour = format_time(unix_time).hour
     return "{} - {}".format(hour, hour + 1)
 
+def day_of_the_week(unix_time):
+    return datetime.fromtimestamp(unix_time).strftime('%A')
+
+days_of_the_week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
 
 def collate_completed_game(result_stats, generation, category):
     result = get_result_raw(
@@ -155,18 +203,25 @@ def collate_completed_game(result_stats, generation, category):
         if category_value not in result_stats:
             result_stats[category_value] = {
                 'wins': 0, 'losses': 0, 'draws': 0,
+                'red_wins': 0, 'blue_wins': 0,
                 'played': 0,
                 'red': 0, 'blue': 0,
                 'scores': [],
                 'scores filtered': {'red': [], 'blue': [], 1: [], 2: [], 3: [], 4: []},
-                'scores filtered time': {'Before 1': [], '1-2': [], '2-4': [], '4-6': [], 'After 6': []}
+                'scores filtered time': {'Before 1': [], '1-2': [], '2-4': [], '4-6': [], 'After 6': []},
+                'scores filtered day': {day: [] for day in days_of_the_week},
+                'scores filtered ian watching': {'playing': [], 'watching': [], 'no': []},
+                'games_played_without_ian': 0,
             }
 
         result_stats[category_value]['played'] += 1
+        if 'Ian' not in generation['game info']['players']:
+            result_stats[category_value]['games_played_without_ian'] += 1
         result_stats[category_value][colour] += 1
 
         if result == colour:
             result_stats[category_value]['wins'] += 1
+            result_stats[category_value][colour + '_wins'] += 1
         elif result == 'draw':
             result_stats[category_value]['draws'] += 1
         else:
@@ -195,6 +250,15 @@ def collate_completed_game(result_stats, generation, category):
                 time_played_category = "{}-{}".format(time_played_start_range, time_played_end_range)
             result_stats[category_value]['scores filtered time'][time_played_category].append(score_to_log)
 
+        if generation['ian watched']:
+            result_stats[category_value]['scores filtered ian watching']['watching'].append(score_to_log)
+        elif 'Ian' in generation['game info']['players']:
+            result_stats[category_value]['scores filtered ian watching']['playing'].append(score_to_log)
+        else:
+            result_stats[category_value]['scores filtered ian watching']['no'].append(score_to_log)
+
+        result_stats[category_value]['scores filtered day'][day_of_the_week(generation['submit time'])].append(score_to_log)
+
         if category == 'players':
             if 'handicaps' not in result_stats[category_value]:
                 result_stats[category_value]['handicaps'] = []
@@ -209,6 +273,9 @@ def collate_completed_game(result_stats, generation, category):
         result_stats['blue team']['won'] += 1
     result_stats['red team']['scores'].append(generation['red score'])
     result_stats['blue team']['scores'].append(410 - generation['red score'])
+    if generation['ian watched']:
+        result_stats['ian watched'] += 1
+
 
 generations = get_completed_generations_with_results(display_count)
 current_handicaps = dict(get_current_handicaps())
@@ -216,7 +283,8 @@ current_handicaps = dict(get_current_handicaps())
 result_stats = {
     'total games': 0,
     'red team': {'won': 0, 'scores': []},
-    'blue team': {'won': 0, 'scores': []}
+    'blue team': {'won': 0, 'scores': []},
+    'ian watched': 0
 }
 
 printed_game_count = 0
@@ -237,6 +305,9 @@ if show_separate_team_scores == 'yes':
         results_table[0].append('average team score when player {}'.format(player_num))
 elif show_separate_team_scores == 'time':
     results_table[0].extend(['Before 1', '1-2', '2-4', '4-6', 'After 6'])
+elif show_separate_team_scores == 'ian':
+    results_table[0].extend(["Ian playing", "Ian watching", "Ian in sprint planning"])
+    results_table[0].extend(days_of_the_week)
 else:
     results_table[0].extend([
         'games on red team', 'games on blue team',
@@ -250,7 +321,7 @@ else:
         ])
 
 players = result_stats.keys()
-for key in ['total games', 'red team', 'blue team']:
+for key in ['total games', 'red team', 'blue team', 'ian watched']:
     players.remove(key)
 if sort == 'games played':
     players_show_order = [(-result_stats[player]['played'], player) for player in players]
@@ -267,22 +338,61 @@ elif sort == 'average handicap':
 
 players_show_order.sort()
 
+def get_games_played(result_stats, player):
+    games_played = result_stats[player]['played']
+    if player == "Ian":
+        games_played = "{} (+ {})".format(games_played, result_stats["ian watched"])
+    return games_played
+
+def get_percentage_played(result_stats, player):
+    percentage_played = result_stats[player]['played'] * 100 / result_stats['total games']
+    if player == "Ian" and "Arvinda" in result_stats:
+        percentage_watched_arvinda = result_stats["ian watched"] * 100 / result_stats['total games']
+        percentage_played = "{} (+ {})".format(percentage_played, percentage_watched_arvinda)
+    return percentage_played
+
 for _, player in players_show_order:
     results_table.append([
         player,
-        result_stats[player]['played'],
-        result_stats[player]['played'] * 100 / result_stats['total games'],
+        get_games_played(result_stats, player),
+        get_percentage_played(result_stats, player),
     ])
 
     if show_separate_team_scores == 'yes':
         results_table[-1].append(round(average(result_stats[player]['scores']), 1))
-        for filter in ['red', 'blue'] + range(1, 5):
+        for filter in ['red', 'blue']:
+            wins_this_colour = result_stats[player][filter + '_wins']
+            games_this_colour = len(result_stats[player]['scores filtered'][filter])
+            percentage_wins_this_colour = 0 if games_this_colour == 0 else wins_this_colour * 100 / games_this_colour
+            results_table[-1].append(
+                "{} ({}, {})".format(
+                    round(average(result_stats[player]['scores filtered'][filter]), 1),
+                    games_this_colour,
+                    percentage_wins_this_colour,
+                )
+            )
+        for filter in range(1, 5):
             results_table[-1].append(
                 "{} ({})".format(
                     round(average(result_stats[player]['scores filtered'][filter]), 1),
                     len(result_stats[player]['scores filtered'][filter]),
                 )
             )
+    elif show_separate_team_scores == 'ian':
+        for ian_watch in ['playing', 'watching', 'no']:
+            results_table[-1].append(
+                "{} ({})".format(
+                    round(average(result_stats[player]['scores filtered ian watching'][ian_watch]), 1),
+                    len(result_stats[player]['scores filtered ian watching'][ian_watch])
+                )
+            )
+        for day in days_of_the_week:
+            results_table[-1].append(
+                "{} ({})".format(
+                    round(average(result_stats[player]['scores filtered day'][day]), 1),
+                    len(result_stats[player]['scores filtered day'][day])
+                )
+            )             
     elif show_separate_team_scores == 'time':
         for time_range in ['Before 1', '1-2', '2-4', '4-6', 'After 6']:
             results_table[-1].append(
@@ -313,8 +423,8 @@ for team in ['red', 'blue']:
     print paragraph(
         "{} team has won {} times and has had an average team score of {}."
         .format(
-            team,
-            result_stats[team.capitalize() + ' team']['won'],
+            team.capitalize(),
+            result_stats[team + ' team']['won'],
             round(average(result_stats[team + ' team']['scores']), 1),
         )
     )
@@ -326,3 +436,6 @@ else:
     game_count_message += "."
 
 print paragraph(game_count_message)
+
+if 'debug' in GET:
+    print result_stats
