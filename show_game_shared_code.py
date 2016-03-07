@@ -178,11 +178,13 @@ def get_result_string(winning_scores, red_score):
 weight_class_map = {
     'babyweight': 0,
     'featherweight': 1,
-    'lightweight': 2,
-    'midweight': 3,
-    'cruiserweight': 4,
-    'metalweight': 5,
-    'heavyweight': 6
+    'sub-lightweight': 2,
+    'lightweight': 3,
+    'sub-midweight': 4,
+    'midweight': 5,
+    'cruiserweight': 6,
+    'metalweight': 7,
+    'heavyweight': 8
 }
 
 
