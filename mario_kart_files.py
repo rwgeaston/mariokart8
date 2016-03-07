@@ -36,11 +36,18 @@ def get_generations_with_results(count='all', reverse_order=True, start_point=0)
     results = {}
     with open('results_log.txt') as results_log:
         for line in results_log.readlines():
-            result_gen_number, red_score, players, handicaps_after, submit_time = eval(line)
+            values = eval(line)
+            if len(values) == 6:
+                ian_watched = values[-1]
+                values = values[:-1]
+            else:
+                ian_watched = False
+            result_gen_number, red_score, players, handicaps_after, submit_time = values
             results[result_gen_number] = {
                 "red score": red_score,
                 "handicaps after": handicaps_after,
-                "submit time": submit_time
+                "submit time": submit_time,
+                "ian watched": ian_watched
             }
 
     for generation in generations:
@@ -84,15 +91,16 @@ def get_next_generation_number():
         return last_generation['generation number'] + 1
 
 
-def append_result(gen_number, red_score, players, handicaps):
+def append_result(gen_number, red_score, ian_watched, players, handicaps):
     with open('results_log.txt', 'a') as results_log:
         results_log.write(
-            "{},{},{},{},{}\n"
-            .format(gen_number, red_score, players, handicaps, time())
+            "{},{},{},{},{},{}\n"
+            .format(gen_number, red_score, players, handicaps, time(), ian_watched)
         )
 
 
 def append_generation(game_info):
+    game_info['time'] = time()
     generation_number = get_next_generation_number()
     with open('generation_log.txt', 'a') as generation_log:
         generation_log.write('{},{}\n'.format(generation_number, game_info))

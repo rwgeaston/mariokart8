@@ -34,14 +34,28 @@ print '''
 '''
 
 
-def game_not_played(gen_number):
-    print '<form name="submit" action="submit.cgi" method="post">'
-    print 'Red team final score: <input type="text" name="redscore"><br><br>'
-    print '<input type="hidden" name="gen" value="{}" />'.format(gen_number)
-    print '<input type="submit" value="Submit result"></form>'
+def game_not_played(gen_number, game_info):
+    print '''<form name="submit" action="submit.cgi" method="post">
+Red team final score: <input type="text" name="redscore"><br><br>
+{ian_watched_form}
+<input type="hidden" name="gen" value="{gen}" />
+<input type="submit" value="Submit result">
+</form>'''.format(gen=gen_number, ian_watched_form=get_ian_watched_form(game_info['players']))
 
 
-def show_result(red_score, result_handicaps, winning_scores, time, game_info, net_red_handicap):
+def get_ian_watched_form(players):
+    if 'Ian' in players:
+        return '<input type="hidden" name="ian_watched" value="no">'
+    no_selected = 'selected="selected"'
+    yes_selected = ''
+    if 'Arvinda' in players:
+        yes_selected, no_selected = no_selected, yes_selected
+    return '''Did Ian watch? <select name="ian_watched">
+<option value="yes" {yes_selected}>Yes</option>
+<option value="no" {no_selected}>No</option>
+</select><br><br>'''.format(yes_selected=yes_selected, no_selected=no_selected)
+
+def show_result(red_score, result_handicaps, ian_watched, winning_scores, time, game_info, net_red_handicap):
     print ("<p>Final score was <span class=red_team>{}</span>-"
            "<span class=blue_team>{}</span> submitted on {}.</p>"
            .format(red_score, 410-red_score, format_time(time)))
@@ -49,11 +63,14 @@ def show_result(red_score, result_handicaps, winning_scores, time, game_info, ne
     print paragraph(get_winning_margin_string(winning_scores, net_red_handicap, red_score))
     print paragraph(get_result_string(winning_scores, red_score))
 
-    print get_result_extra_handicaps(game_info, red_score)
+    #print get_result_extra_handicaps(game_info, red_score)
 
     handicaps_after_this_game = [["Player", "Handicap"]]
     for player, handicap in result_handicaps:
         handicaps_after_this_game.append([player, handicap])
+
+    if ian_watched:
+        print paragraph("Ian watched this game!")
 
     print paragraph(html_table(handicaps_after_this_game))
 
@@ -114,11 +131,12 @@ def main():
         )
 
     if 'red score' not in generation:
-        game_not_played(int(GET['gen'].value))
+        game_not_played(int(GET['gen'].value), generation['game info'])
     else:
         show_result(
             generation['red score'],
             generation['handicaps after'],
+            generation['ian watched'],
             winning_scores,
             generation['submit time'],
             generation['game info'],

@@ -57,7 +57,7 @@ def handicap_change(selection, change_direction):
 
 
 def decay_handicaps():
-    handicaps = get_handicaps()
+    handicaps = get_current_handicaps()
     players_to_decay = not_recent_players()
 
     for player in handicaps:
@@ -68,7 +68,7 @@ def decay_handicaps():
 
 
 def main():
-    for key in ['gen', 'redscore']:
+    for key in ['gen', 'redscore', 'ian_watched']:
         if key not in GET:
             print "You don't have a {} value in the GET. How did you get to this page?".format(key)
             return
@@ -82,6 +82,11 @@ def main():
         red_score = int(GET['redscore'].value)
     except ValueError:
         return invalid_score("I don't think you submitted an integer for the red team score.")
+
+    if GET['ian_watched'].value == 'yes':
+        ian_watched = True
+    else:
+        ian_watched = False
 
     if red_score < 105 or red_score > 305:
         return invalid_score("One of us doesn't know how mario kart scoring works.")
@@ -103,6 +108,7 @@ def main():
     append_result(
         generation['generation number'],
         red_score,
+        ian_watched,
         generation['game info']['players'],
         handicaps
     )
