@@ -28,7 +28,7 @@ for gen_range_lower in range((len(red_scores) - 1) / range_size + 1):
     score_range = red_scores[gen_range_lower * range_size:(gen_range_lower + 1) * range_size]
     red_scores_grouped.append([
         "{} - {}".format(gen_range_lower * range_size + 1, (gen_range_lower + 1) * range_size),
-        average(score_range)
+        round(average(score_range), 1)
     ])
 
 print html_table(red_scores_grouped)
