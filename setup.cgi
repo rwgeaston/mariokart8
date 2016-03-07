@@ -35,9 +35,6 @@ player_list = [player[0] for player in get_current_handicaps()]
 
 print '<form name="settings" action="generate.cgi" method="get"><br />'
 
-print '''<b><p>The following things are not yet unlocked and so will not be randomly selected:</p>
-<p>Gold Tyres</p></b>'''
-
 checkboxes = [[]]
 
 for player in sorted(player_list):
