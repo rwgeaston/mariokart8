@@ -65,8 +65,13 @@ def display_completed_game(generation):
 
 
 def display_non_completed_game(generation):
-    print ('<p>{} <a href="show_game.cgi?gen={}">See details or submit result.</a> </p>'
-           .format(get_teams(generation['game info']), generation['generation number']))
+    text = '{} '.format(get_teams(generation['game info']))
+    if 'time' in generation['game info']:
+        text += '({}) '.format(format_time(generation['game info']['time']))
+    print (
+        '<p>{}<a href="show_game.cgi?gen={}">See details or submit result.</a> </p>'
+        .format(text, generation['generation number'])
+    )
 
 print '''
 <html>
