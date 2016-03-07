@@ -286,7 +286,7 @@ for _, player in players_show_order:
         result_stats[player]['played'] * 100 / result_stats['total games'],
     ])
 
-    if form_values['column_selection'] == 'team':
+    if form_values['column_selection'] == 'teams':
         results_table[-1].append(round(average(result_stats[player]['scores']), 1))
         for filter in ['red', 'blue'] + range(1, 5):
             results_table[-1].append(
