@@ -57,10 +57,11 @@ weight_class_map = {
     'babyweight': 0,
     'featherweight': 1,
     'lightweight': 2,
-    'midweight': 3,
-    'cruiserweight': 4,
-    'metalweight': 5,
-    'heavyweight': 6
+    'sub-midweight': 3, 
+    'midweight': 4,
+    'cruiserweight': 5,
+    'metalweight': 6,
+    'heavyweight': 7
 }
 
 print '''
