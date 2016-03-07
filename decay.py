@@ -12,7 +12,7 @@ def recent_players(game_count=50):
 
 
 def not_recent_players(game_count=50):
-    all_players = set([player[0] for player in get_current_handicaps])
+    all_players = set([player[0] for player in get_current_handicaps()])
     not_recent_players = all_players - recent_players(game_count)
 
     return not_recent_players
