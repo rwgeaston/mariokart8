@@ -50,9 +50,19 @@ def get_generations_with_results(count='all', reverse_order=True, start_point=0)
                 "ian watched": ian_watched
             }
 
+    shares = {}
+    with open('share_prices.txt') as share_price_log:
+        for line in share_price_log.readlines():
+            gen_number, price_increase = eval(line)
+            shares[gen_number] = price_increase
+
     for generation in generations:
         if generation['generation number'] in results:
             generation.update(results[generation['generation number']])
+            if generation['generation number'] in shares:
+                generation['share price increase'] = shares[generation['generation number']]
+            else:
+                generation['share price increase'] = 'unknown'
 
     return generations
 
