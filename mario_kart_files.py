@@ -108,7 +108,7 @@ def append_result(gen_number, red_score, ian_watched, players, handicaps):
             "{},{},{},{},{},{}\n"
             .format(gen_number, red_score, players, handicaps, time(), ian_watched)
         )
-    with open('share_prices.txt') as share_price_log:
+    with open('share_prices.txt', 'a') as share_price_log:
         share_price_log.write(
             "{},{}\n"
             .format(gen_number, yesterdays_price_from_timestamp(time()))
