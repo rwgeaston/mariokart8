@@ -9,6 +9,7 @@ from show_game_shared_code import get_winning_scores, format_time, average
 from vehicle_data import characters, spec_order, character_classes, vehicles, \
     tyres, gliders, vehicle_classes
 from mario_kart_files import get_completed_generations_with_results, get_current_handicaps
+from moon_phase import moon_phase_name
 
 #enable debugging
 cgitb.enable()
@@ -49,6 +50,10 @@ if 'separate_team_scores' in GET:
         show_separate_team_scores = 'time'
     elif GET['separate_team_scores'].value == 'ian':
         show_separate_team_scores = 'ian'
+    elif GET['separate_team_scores'].value == 'moon':
+        show_separate_team_scores = 'moon'
+    elif GET['separate_team_scores'].value == 'shares':
+        show_separate_team_scores = 'shares'
 
 sort = 'games played'
 if 'sort' in GET:
@@ -57,6 +62,8 @@ if 'sort' in GET:
         'wins', 'draws', 'losses', 'average handicap'
     ]:
         sort = GET['sort'].value
+    elif GET['sort'].value == 'category':
+        sort = category
 
 
 def get_result_raw(winning_scores, red_score):
@@ -136,6 +143,10 @@ def category_map(generation, category):
     elif category == 'scrumteams':
         teams = [get_new_scrum_team(player) for player in generation['game info']['players']]
         return teams
+    elif category == 'moon':
+        return [moon_phase_name(generation['submit time'])] * 4
+    elif category == 'shares':
+        return [simplify_share_prices(generation['share price increase'])] * 4
     else:
         raise Exception("Invalid category value")
 
@@ -180,7 +191,25 @@ def hour(unix_time):
 def day_of_the_week(unix_time):
     return datetime.fromtimestamp(unix_time).strftime('%A')
 
+def simplify_share_prices(price_change):
+    if price_change == 'unknown':
+        return 'unknown'
+    elif price_change < -0.4:
+        return 'big drop'
+    elif price_change < -0.1:
+        return 'small drop'
+    elif price_change < 0.1:
+        return 'no change'
+    elif price_change < 0.4:
+        return 'small increase'
+    else:
+        return 'big increase'
+
+
+
 days_of_the_week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+phases_of_the_moon = ['new moon', 'waning crescent', 'waning gibbous', 'full moon', 'waxing gibbous', 'waxing crescent']
+share_price_changes = ['unknown', 'big drop', 'small drop', 'no change', 'small increase', 'big increase']
 
 def collate_completed_game(result_stats, generation, category):
     result = get_result_raw(
@@ -211,6 +240,8 @@ def collate_completed_game(result_stats, generation, category):
                 'scores filtered time': {'Before 1': [], '1-2': [], '2-4': [], '4-6': [], 'After 6': []},
                 'scores filtered day': {day: [] for day in days_of_the_week},
                 'scores filtered ian watching': {'playing': [], 'watching': [], 'no': []},
+                'scores filtered moon': {phase: [] for phase in phases_of_the_moon},
+                'scores filtered shares': {change: [] for change in share_price_changes},
                 'games_played_without_ian': 0,
             }
 
@@ -257,8 +288,13 @@ def collate_completed_game(result_stats, generation, category):
         else:
             result_stats[category_value]['scores filtered ian watching']['no'].append(score_to_log)
 
-        result_stats[category_value]['scores filtered day'][day_of_the_week(generation['submit time'])].append(score_to_log)
-
+        result_stats[category_value]['scores filtered day'][
+            day_of_the_week(generation['submit time'])].append(score_to_log)
+        result_stats[category_value]['scores filtered moon'][
+            moon_phase_name(generation['submit time'])].append(score_to_log)
+        result_stats[category_value]['scores filtered shares'][
+            simplify_share_prices(generation['share price increase'])].append(score_to_log)
+        
         if category == 'players':
             if 'handicaps' not in result_stats[category_value]:
                 result_stats[category_value]['handicaps'] = []
@@ -308,6 +344,10 @@ elif show_separate_team_scores == 'time':
 elif show_separate_team_scores == 'ian':
     results_table[0].extend(["Ian playing", "Ian watching", "Ian in sprint planning"])
     results_table[0].extend(days_of_the_week)
+elif show_separate_team_scores == 'moon':
+    results_table[0].extend(phases_of_the_moon)
+elif show_separate_team_scores == 'shares':
+    results_table[0].extend(share_price_changes)
 else:
     results_table[0].extend([
         'games on red team', 'games on blue team',
@@ -399,6 +439,22 @@ for _, player in players_show_order:
                 "{} ({})".format(
                     round(average(result_stats[player]['scores filtered time'][time_range]), 1),
                     len(result_stats[player]['scores filtered time'][time_range])
+                )
+            )
+    elif show_separate_team_scores == 'moon':
+        for phase in phases_of_the_moon:
+            results_table[-1].append(
+                "{} ({})".format(
+                    round(average(result_stats[player]['scores filtered moon'][phase]), 1),
+                    len(result_stats[player]['scores filtered moon'][phase])
+                )
+            )
+    elif show_separate_team_scores == 'shares':
+        for change in share_price_changes:
+            results_table[-1].append(
+                "{} ({})".format(
+                    round(average(result_stats[player]['scores filtered shares'][change]), 1),
+                    len(result_stats[player]['scores filtered shares'][change])
                 )
             )
     else:
